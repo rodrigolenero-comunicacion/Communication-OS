@@ -68,6 +68,14 @@ export function NewPieceFields({
           </select>
         </Field>
       </div>
+      {templates.length === 0 && (
+        <p className="text-xs text-warn">
+          No hay plantillas cargadas. Si acabas de actualizar, aplica en Supabase las migraciones 0006 y 0007 (ver README). Puedes crear la pieza sin plantilla.
+        </p>
+      )}
+      {templates.length > 0 && category && available.length === 0 && (
+        <p className="text-xs text-warn">No hay plantillas activas de esta categoría para esta cuenta. Créalas o actívalas en Plantillas.</p>
+      )}
       {selected && (
         <div className="rounded-md border border-line bg-soft p-3 text-xs">
           <p className="font-medium">Se prellenará:</p>
