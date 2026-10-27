@@ -72,6 +72,14 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - Frames del packet sin UI (solo base de datos).
 - Lectura de hasta 5 000 piezas por vista.
 
+## Avance de configuración · 2026-10-27 (ejecutado por el propietario)
+
+- Proyecto Supabase exclusivo `content-os` creado en organización propia (no la del Communication Hub). Data API activa, exposición automática de tablas desactivada, RLS automática activada, sin integración GitHub.
+- Registro público desactivado y usuario propietario creado (indicación dada; no verificada desde aquí).
+- Migraciones 0001–0005 aplicadas por SQL Editor. Usuario insertado en `authorized_users`.
+- Comprobación SQL reportada por el propietario: canales = 2, autorizados = 1, tablas sin RLS = 0. PASS.
+- Pendiente: `npm run verify:supabase` contra la API real y recorrido de interfaz con sesión real.
+
 ## Siguiente unidad
 
 1. Rodrigo: crear el proyecto Supabase siguiendo README §«Configuración de Supabase» (pasos 1–7) y compartir solo el resultado de `npm run verify:supabase` (nunca claves).
