@@ -80,6 +80,8 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - Comprobación SQL reportada por el propietario: canales = 2, autorizados = 1, tablas sin RLS = 0. PASS.
 - `npm run verify:supabase` (parte anónima) ejecutado desde el entorno de Claude contra la API real: S01 PASS. Tablas operativas, catálogo y allowlist responden `42501 permission denied` al rol anónimo; `create_brand` y `whoami` también.
 - App (`next build` + `next start`) contra el proyecto real: arranca y conecta; `/`, `/portfolio` y `/piezas/…` sin sesión redirigen a `/login` sin mostrar datos.
+- Netlify: proyecto privado `communication-os` desplegado por el propietario desde la rama `claude/new-session-ejt98m` con las dos variables `NEXT_PUBLIC_…`. El primer deploy dio error 500 en vistas protegidas (probable compilación sin variables); corregido en `68d8bf1` (sin configuración ⇒ redirige a `/login`) y redeploy correcto.
+- Login real con el usuario propietario: PASS (captura del propietario: Control Tower en «Primer uso»). Confirma sesión + allowlist + lectura bajo RLS en producción.
 - Pendiente: parte autenticada de `verify:supabase` (requiere la contraseña del propietario, que no se comparte) y recorrido de interfaz con sesión real.
 
 ## Siguiente unidad
