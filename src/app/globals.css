@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-canvas: var(--canvas);
+  --color-soft: var(--soft);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-info: var(--info);
+}
+
+:root {
+  --ink: #17191c;
+  --paper: #ffffff;
+  --canvas: #f6f6f4;
+  --soft: #efefec;
+  --line: #dcdcd7;
+  --muted: #5e6166;
+  --good: #1d7a46;
+  --warn: #9a6200;
+  --bad: #b3261e;
+  --info: #2257a8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #ecece8;
+    --paper: #1b1d20;
+    --canvas: #121315;
+    --soft: #26292d;
+    --line: #34383d;
+    --muted: #a4a8ad;
+    --good: #5cc28a;
+    --warn: #e0a640;
+    --bad: #f07a72;
+    --info: #7aa7ec;
+    color-scheme: dark;
+  }
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+.btn {
+  @apply inline-flex min-h-9 items-center rounded-md px-3 py-1.5 text-sm font-medium disabled:cursor-wait disabled:opacity-60;
+}
+
+.input {
+  @apply w-full rounded-md border border-line bg-paper px-2.5 py-1.5 text-sm text-ink;
+}
+
+:focus-visible {
+  outline: 2px solid var(--info);
+  outline-offset: 2px;
+}
+
+table.data {
+  @apply w-full border-collapse text-sm;
+}
+table.data th {
+  @apply border-b border-line px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide text-muted;
+}
+table.data td {
+  @apply border-b border-line px-2 py-2 align-top;
+}

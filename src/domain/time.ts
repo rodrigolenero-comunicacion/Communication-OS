@@ -73,13 +73,18 @@ function zoneOffsetMs(instant: Date): number {
   return asUtc - Math.floor(instant.getTime() / 1000) * 1000;
 }
 
-/** Instante UTC correspondiente a las 00:00 locales de `date`. */
-export function localMidnight(date: LocalDate): Date {
-  const guess = Date.parse(`${date}T00:00:00Z`);
+/** Instante UTC de una fecha y hora locales (HH:mm) en la zona editorial. */
+export function localDateTime(date: LocalDate, time = "00:00"): Date {
+  const guess = Date.parse(`${date}T${time}:00Z`);
   let instant = guess - zoneOffsetMs(new Date(guess));
   // Segunda pasada por si el desfase cambia entre la estimación y el resultado.
   instant = guess - zoneOffsetMs(new Date(instant));
   return new Date(instant);
+}
+
+/** Instante UTC correspondiente a las 00:00 locales de `date`. */
+export function localMidnight(date: LocalDate): Date {
+  return localDateTime(date, "00:00");
 }
 
 /** Comparación lexicográfica válida para fechas ISO. */

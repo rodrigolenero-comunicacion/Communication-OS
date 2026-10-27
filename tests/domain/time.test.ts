@@ -26,3 +26,8 @@ test("validación y aritmética de fechas", () => {
   assert.ok(!isLocalDate("27/10/2026"));
   assert.equal(addDays("2026-12-28", 7), "2027-01-04");
 });
+
+test("hora local a instante", async () => {
+  const { localDateTime } = await import("../../src/domain/time.ts");
+  assert.equal(localDateTime("2026-11-04", "10:30").toISOString(), "2026-11-04T16:30:00.000Z");
+});

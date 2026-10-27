@@ -100,8 +100,9 @@ test("C10 hold excluye de ambas capas y de reserva; liberar restaura", () => {
 
 test("C11 W0 sin cubrir: runway seguro 0 y CRITICAL aunque W1 esté cubierta", () => {
   const r = report(approvedFor(W1, 4));
-  assert.equal(r.safeRunway.kind, "gap");
-  assert.equal(r.safeRunway.kind !== "no_target" && r.safeRunway.days, 0);
+  const runway = r.safeRunway;
+  assert.equal(runway.kind, "gap");
+  assert.equal(runway.kind === "gap" ? runway.days : -1, 0);
   assert.equal(r.health, "CRITICAL");
 });
 
