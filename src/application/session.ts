@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isSupabaseConfigured } from "@/infrastructure/env";
 import { createSupabaseServerClient } from "@/infrastructure/supabase-server";
 
 export type SessionState =
@@ -8,6 +9,8 @@ export type SessionState =
 
 /** Sesión verificada contra Supabase Auth y allowlist en la base (no en la UI). */
 export async function getSession(): Promise<SessionState> {
+  // Sin configuración no hay sesión posible; /login explica qué falta en vez de un error 500.
+  if (!isSupabaseConfigured()) return { kind: "anonymous" };
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.getUser();
   if (!data.user) return { kind: "anonymous" };
@@ -16,7 +19,7 @@ export async function getSession(): Promise<SessionState> {
   return { kind: "authorized", userId: data.user.id, email: data.user.email ?? null, supabase };
 }
 
-/** Para páginas: redirige si no hay sesión; devuelve null si está denegada. */
+/** Para páginas: redirige a /login si no hay sesión. */
 export async function requireSession() {
   const session = await getSession();
   if (session.kind === "anonymous") redirect("/login");
