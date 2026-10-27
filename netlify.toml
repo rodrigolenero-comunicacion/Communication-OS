@@ -1,0 +1,8 @@
+# Configuración mínima. Netlify detecta Next.js y aplica su runtime oficial.
+# Preparado, no desplegado: el despliegue requiere instrucción del propietario.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
