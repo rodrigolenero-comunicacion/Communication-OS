@@ -1,0 +1,12 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+# Generated application/build files
+node_modules/
+.next/
+out/
+.netlify/
+coverage/
+*.tsbuildinfo
+.DS_Store
