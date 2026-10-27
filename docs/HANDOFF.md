@@ -78,7 +78,9 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - Registro público desactivado y usuario propietario creado (indicación dada; no verificada desde aquí).
 - Migraciones 0001–0005 aplicadas por SQL Editor. Usuario insertado en `authorized_users`.
 - Comprobación SQL reportada por el propietario: canales = 2, autorizados = 1, tablas sin RLS = 0. PASS.
-- Pendiente: `npm run verify:supabase` contra la API real y recorrido de interfaz con sesión real.
+- `npm run verify:supabase` (parte anónima) ejecutado desde el entorno de Claude contra la API real: S01 PASS. Tablas operativas, catálogo y allowlist responden `42501 permission denied` al rol anónimo; `create_brand` y `whoami` también.
+- App (`next build` + `next start`) contra el proyecto real: arranca y conecta; `/`, `/portfolio` y `/piezas/…` sin sesión redirigen a `/login` sin mostrar datos.
+- Pendiente: parte autenticada de `verify:supabase` (requiere la contraseña del propietario, que no se comparte) y recorrido de interfaz con sesión real.
 
 ## Siguiente unidad
 
