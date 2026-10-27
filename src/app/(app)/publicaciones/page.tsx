@@ -39,6 +39,7 @@ export default async function PublicationQueuePage() {
           canCreate={hasCurrentApproval(f) && account.active}
           assignedWeek={f.assignedWeek}
           now={now}
+          contentType={piece.content_type}
         />
       </div>
     );

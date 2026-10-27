@@ -20,6 +20,7 @@ export function PublicationPanel({
   channels,
   activeChannelIds,
   canCreate,
+  contentType,
   assignedWeek,
   now,
 }: {
@@ -30,10 +31,15 @@ export function PublicationPanel({
   canCreate: boolean;
   assignedWeek: LocalDate | null;
   now: Date;
+  contentType?: string | null;
 }) {
   const channelName = new Map(channels.map((c) => [c.id, c.name]));
   const suggestedDay = assignedWeek && assignedWeek > localDateInput(now) ? assignedWeek : localDateInput(now);
-  const activeChannels = channels.filter((c) => activeChannelIds.includes(c.id));
+  const CHANNEL_ORDER = ["instagram", "facebook"];
+  const activeChannels = channels
+    .filter((c) => activeChannelIds.includes(c.id))
+    .sort((a, b) => (CHANNEL_ORDER.indexOf(a.key) + 1 || 99) - (CHANNEL_ORDER.indexOf(b.key) + 1 || 99));
+  const suggestedFormat = formatFromContentType(contentType);
 
   return (
     <div className="space-y-3">
@@ -123,7 +129,7 @@ export function PublicationPanel({
               <select name="channel_key" className="input w-auto">{activeChannels.map((c) => <option key={c.id} value={c.key}>{c.name}</option>)}</select>
             </Field>
             <Field label="Formato">
-              <select name="format" className="input w-auto">{Object.entries(FORMAT_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+              <select name="format" className="input w-auto" defaultValue={suggestedFormat}>{Object.entries(FORMAT_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
             </Field>
           </CommandForm>
         )
@@ -132,4 +138,14 @@ export function PublicationPanel({
       )}
     </div>
   );
+}
+
+/** Formato sugerido a partir del tipo de contenido libre de la pieza; solo un valor por defecto. */
+function formatFromContentType(contentType: string | null | undefined): string {
+  const t = (contentType ?? "").toLowerCase();
+  if (t.includes("carrusel") || t.includes("carousel")) return "carousel";
+  if (t.includes("reel")) return "reel";
+  if (t.includes("story") || t.includes("historia")) return "story";
+  if (t.includes("video")) return "video";
+  return "post";
 }

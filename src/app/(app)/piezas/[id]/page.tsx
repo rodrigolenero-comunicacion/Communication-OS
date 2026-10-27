@@ -139,7 +139,8 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
               <div className="mt-2 flex flex-wrap gap-3">
                 {assignableWeeks.length > 0 && scheduled.length === 0 && (
                   <CommandForm command="assign_week" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel={fact.assignedWeek ? "Reasignar" : "Asignar"} inline tone="secondary">
-                    <select name="week_start" className="input w-auto" aria-label="Semana">
+                    <select name="week_start" className="input w-auto" aria-label="Semana" required defaultValue="">
+                      <option value="" disabled>{fact.assignedWeek ? "Elegir otra semana…" : "Elegir semana…"}</option>
                       {assignableWeeks.map((w) => <option key={w} value={w}>{fmtWeek(w)}</option>)}
                     </select>
                   </CommandForm>
@@ -329,6 +330,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
               canCreate={hasCurrentApproval(fact) && account.active}
               assignedWeek={fact.assignedWeek}
               now={snapshot.now}
+              contentType={piece.content_type}
             />
           </Section>
         </div>

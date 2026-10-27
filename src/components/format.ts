@@ -83,6 +83,8 @@ export function describeRunway(r: Runway): string {
     case "no_target":
       return "Sin objetivo configurado";
     case "gap":
+      // Un gap en la semana en curso: no hay cobertura segura que mostrar hasta una fecha.
+      if (r.until.getTime() <= Date.now()) return `0 días · la semana actual (desde ${fmtDay(r.gapWeek)}) no está cubierta`;
       return `${r.days} día(s) · cubierto hasta ${fmtInstant(r.until)} (límite exclusivo)`;
     case "at_least":
       return `al menos ${r.days} día(s) · horizonte cubierto hasta ${fmtInstant(r.until)}`;
