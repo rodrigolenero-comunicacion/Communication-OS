@@ -46,6 +46,11 @@ export async function runCommand(_prev: CommandResult | null, fd: FormData): Pro
     };
   }
   revalidatePath("/", "layout");
+  // Al crear una pieza o un espejo, se abre su ficha para continuar el flujo.
+  const pieceId = (data as { piece_id?: string } | null)?.piece_id;
+  if ((name === "create_piece" || name === "create_external_mirror") && pieceId && UUID.test(pieceId)) {
+    redirect(`/piezas/${pieceId}`);
+  }
   const replayed = Boolean((data as { replayed?: boolean } | null)?.replayed);
   return { ok: true, message: replayed ? `${spec.success} (ya estaba registrado)` : spec.success, at };
 }
