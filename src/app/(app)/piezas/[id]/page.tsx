@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadContext, newRequestId } from "@/application/context";
 import { CommandForm } from "@/components/CommandForm";
+import { CATEGORY_LABEL } from "@/components/NewPieceFields";
 import { PacketView } from "@/components/PacketView";
 import { PublicationPanel } from "@/components/PublicationPanel";
 import { TimingFields } from "@/components/TimingFields";
@@ -64,6 +65,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
     : piece.production_status === "approved" ? "Aprobada: reábrela para editar su contenido (invalida la aprobación)."
     : piece.production_status === "in_review" ? "En revisión: pide cambios desde Review Desk para editar." : null;
   const v = piece.version;
+  const template = piece.template_id ? snapshot.templates.find((t) => t.id === piece.template_id) ?? null : null;
   const assignableWeeks = horizonWeeks(snapshot.now).filter((w) => weekFitsTiming(fact.timing, w) && w !== fact.assignedWeek);
   const scheduled = pubs.filter((p) => p.status === "scheduled");
 
@@ -75,6 +77,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
           <>
             <Link href={`/cuentas/${account.id}`} className="underline">{account.name}</Link> · {brand.name} · {BUCKET_LABEL[piece.bucket]} ·
             {isLocal ? " Pieza local (Content OS)" : ` Espejo de ${SOURCE_LABEL[mirror?.source_system ?? "manual"]}`}
+            {piece.category && <> · {CATEGORY_LABEL[piece.category]}{template ? ` → ${template.name}` : ""}</>}
           </>
         }
         actions={
@@ -201,7 +204,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
                   <fieldset className="grid gap-3 md:grid-cols-2">
                     <legend className="mb-1 text-sm font-medium">Words</legend>
                     {([["hook", "Hook"], ["on_screen", "Texto en pantalla"], ["final_line", "Cierre"], ["caption", "Caption"], ["cta", "CTA"]] as const).map(([k, label]) => (
-                      <Field key={k} label={label}><textarea name={`words_${k}`} defaultValue={(packet?.words as Record<string, string> | undefined)?.[k] ?? ""} rows={2} className="input" /></Field>
+                      <Field key={k} label={label}><textarea name={`words_${k}`} defaultValue={(packet?.words as Record<string, string> | undefined)?.[k] ?? ""} placeholder={template?.words_guide?.[k] ?? ""} rows={2} className="input" /></Field>
                     ))}
                   </fieldset>
                   <div className="grid gap-3 md:grid-cols-2">

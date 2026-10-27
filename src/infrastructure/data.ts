@@ -33,6 +33,13 @@ export interface PieceRow {
   timing_mode: TimingMode; fixed_date: string | null; valid_from: string | null; valid_until: string | null;
   production_spec_text: string | null; production_spec_url: string | null; version: number;
   created_at: string; updated_at: string;
+  category: Category | null; template_id: string | null;
+}
+export type Category = "conectar" | "educativo" | "cobertura" | "institucional" | "promocional";
+export interface TemplateRow {
+  id: string; account_id: string | null; category: Category; name: string; content_type: string | null;
+  suggested_format: string | null; objective: string | null; audience: string | null; experience: string | null;
+  spec_text: string | null; words_guide: Record<string, string>; is_draft: boolean; active: boolean; version: number;
 }
 export interface AssignmentRow { id: string; content_piece_id: string; week_start: string; version: number }
 export interface PublicationRow {
@@ -66,6 +73,7 @@ export interface Snapshot {
   publications: PublicationRow[];
   references: SourceReferenceRow[];
   observations: ObservationRow[];
+  templates: TemplateRow[];
   facts: PieceFact[];
   accountFacts: AccountFact[];
 }
@@ -78,7 +86,7 @@ async function all<T>(query: PromiseLike<{ data: T[] | null; error: { message: s
 
 /** Lectura coherente del estado necesario para cobertura y colas. */
 export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): Promise<Snapshot> {
-  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations] =
+  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates] =
     await Promise.all([
       all<BrandRow>(supabase.from("brands").select("*").order("name")),
       all<AccountRow>(supabase.from("accounts").select("*").order("name")),
@@ -90,6 +98,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       all<PublicationRow>(supabase.from("publications").select("*").order("created_at")),
       all<SourceReferenceRow>(supabase.from("source_references").select("*").order("created_at")),
       all<ObservationRow>(supabase.from("source_observations").select("*")),
+      optionalTemplates(supabase),
     ]);
 
   const assignmentMap = new Map(assignments.map((a) => [a.content_piece_id, a]));
@@ -159,6 +168,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
     publications,
     references,
     observations,
+    templates,
     facts,
     accountFacts: accounts.map((a) => ({
       id: a.id,
@@ -168,6 +178,16 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       coverageMode: a.coverage_mode,
     })),
   };
+}
+
+/** Las plantillas son opcionales: si su migración aún no se aplicó, la app sigue sin ellas. */
+async function optionalTemplates(supabase: SupabaseClient): Promise<TemplateRow[]> {
+  const { data, error } = await supabase.from("piece_templates").select("*").order("category").order("name");
+  if (error) {
+    console.warn(`Plantillas no disponibles: ${error.message}`);
+    return [];
+  }
+  return (data ?? []) as TemplateRow[];
 }
 
 function compareObservation(a: ObservationRow, b: ObservationRow): number {

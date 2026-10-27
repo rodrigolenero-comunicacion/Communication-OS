@@ -66,6 +66,8 @@ const BUCKETS = ["feed", "stories"] as const;
 const TIMING = ["fixed", "window", "flexible"] as const;
 const FORMATS = ["post", "carousel", "reel", "video", "story", "other"] as const;
 const SOURCE_SYSTEMS = ["manual", "st_hub", "ijlv_editorial", "solotu_cerebro"] as const;
+export const CATEGORIES = ["conectar", "educativo", "cobertura", "institucional", "promocional"] as const;
+const WORD_KEYS = ["hook", "on_screen", "final_line", "caption", "cta"] as const;
 const OBSERVED = ["idea", "planned", "in_production", "in_review", "changes_requested", "approved", "unknown"] as const;
 
 const pieceVersion = (fd: FormData) => ({ p_piece_id: uuid(fd, "piece_id"), p_expected_version: int(fd, "expected_version") });
@@ -127,6 +129,40 @@ export const COMMANDS: Record<string, CommandSpec> = {
     rpc: "create_piece", success: "Pieza creada",
     params: (fd) => ({ p_account_id: uuid(fd, "account_id"), p_title: text(fd, "title"),
       p_bucket: oneOf(fd, "bucket", BUCKETS), ...timing(fd) }),
+  },
+  quick_create_piece: {
+    rpc: "quick_create_piece", success: "Pieza creada",
+    params: (fd) => ({ p_account_id: uuid(fd, "account_id"), p_title: text(fd, "title"),
+      p_bucket: oneOf(fd, "bucket", BUCKETS), ...timing(fd),
+      p_template_id: uuid(fd, "template_id", true), p_week_start: date(fd, "week_start", true),
+      p_initial_stage: oneOf(fd, "initial_stage", ["idea", "planned", "in_production"] as const, true) }),
+  },
+  upsert_template: {
+    rpc: "upsert_template", success: "Plantilla guardada",
+    params: (fd) => {
+      const templateId = uuid(fd, "template_id", true);
+      return {
+        p_template_id: templateId,
+        p_expected_version: templateId ? int(fd, "expected_version") : null,
+        p_account_id: uuid(fd, "account_id", true),
+        p_category: oneOf(fd, "category", CATEGORIES),
+        p_name: text(fd, "name"),
+        p_content_type: text(fd, "content_type"),
+        p_suggested_format: oneOf(fd, "suggested_format", FORMATS, true),
+        p_objective: text(fd, "objective"),
+        p_audience: text(fd, "audience"),
+        p_experience: text(fd, "experience"),
+        p_spec_text: text(fd, "spec_text"),
+        p_words_guide: Object.fromEntries(
+          WORD_KEYS.map((k) => [k, text(fd, `guide_${k}`)] as const).filter(([, v]) => v !== null),
+        ),
+      };
+    },
+  },
+  set_template_active: {
+    rpc: "set_template_active", success: "Plantilla actualizada",
+    params: (fd) => ({ p_template_id: uuid(fd, "template_id"), p_expected_version: int(fd, "expected_version"),
+      p_active: bool(fd, "active") }),
   },
   update_piece: {
     rpc: "update_piece", success: "Cambios guardados",

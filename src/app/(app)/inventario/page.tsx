@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loadContext, newRequestId } from "@/application/context";
 import { CommandForm } from "@/components/CommandForm";
+import { NewPieceFields } from "@/components/NewPieceFields";
 import { TimingFields } from "@/components/TimingFields";
 import { BUCKET_LABEL, PUB_LABEL, SOURCE_LABEL, STATUS_LABEL, STATUS_TONE, fmtDate, fmtWeek } from "@/components/format";
 import { Badge, Details, Empty, Field, PageHeader, Section } from "@/components/ui";
@@ -117,27 +118,17 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section id="nueva">
-          <Details summary="Nueva pieza local" open={one(sp.nuevo) === "1"}>
+          <Details summary="Nueva pieza" open={one(sp.nuevo) === "1" || pieces.length === 0}>
             {accounts.filter((a) => a.active).length === 0 ? <Empty>Primero crea una cuenta activa en Portfolio.</Empty> : (
-              <CommandForm command="create_piece" requestId={newRequestId()} submitLabel="Crear pieza">
-                <Field label="Título"><input name="title" required maxLength={200} className="input" /></Field>
-                <Field label="Cuenta">
-                  <select name="account_id" defaultValue={filter.account || one(sp.account)} className="input">
-                    {brands.map((b) => (
-                      <optgroup key={b.id} label={b.name}>
-                        {accounts.filter((a) => a.brand_id === b.id && a.active).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Bucket">
-                  <select name="bucket" defaultValue={filter.bucket || "feed"} className="input"><option value="feed">Feed</option><option value="stories">Stories</option></select>
-                </Field>
-                <TimingFields />
-                <p className="text-xs text-muted">
-                  Se crea como idea y con ownership local. Asignar semana, producción y revisión se hacen desde el detalle.
-                  {one(sp.week) && <> Semana sugerida por la necesidad: {fmtWeek(one(sp.week))}.</>}
-                </p>
+              <CommandForm command="quick_create_piece" requestId={newRequestId()} submitLabel="Crear pieza">
+                <NewPieceFields
+                  accounts={accounts.filter((a) => a.active).map((a) => ({
+                    id: a.id, name: a.name, brandName: brands.find((b) => b.id === a.brand_id)?.name ?? "",
+                  }))}
+                  templates={snapshot.templates}
+                  weeks={weeks.map((w) => ({ value: w, label: fmtWeek(w) }))}
+                  defaults={{ accountId: filter.account || one(sp.account), bucket: filter.bucket, week: one(sp.week) }}
+                />
               </CommandForm>
             )}
           </Details>

@@ -39,6 +39,18 @@ Fecha: 2026-10-27. Estado: implementadas, revisables por el propietario. Complem
 | Frames | La base valida `frames` (≤30, esquema fijo) pero la UI de V0.1 no los edita; el preview se registra como tipo + enlace |
 | Lectura | Se cargan hasta 5 000 piezas por vista; suficiente para uso personal. Revisar si el volumen crece |
 
+## Plantillas y creación rápida (2026-10-27, solicitado por el propietario tras el primer recorrido)
+
+| Decisión | Motivo / consecuencia |
+|---|---|
+| Tabla `piece_templates` editable desde la app (categoría → tipo), general o por cuenta | El propietario reportó que capturar cada pieza le costaba más tiempo del que ahorraba. Categorías definidas por él: Conectar (humor, emoción, situaciones cotidianas — sin relación con CONECTA de ST Hub), Educativo / valor, Cobertura de evento, Institucional / anuncio, Promocional / venta |
+| 22 plantillas iniciales genéricas marcadas como borrador | Punto de partida editable; las preguntas guía orientan el texto creativo pero no lo escriben. Editar una plantilla la marca como revisada |
+| `quick_create_piece` (nuevo comando, aditivo) | Crea con plantilla, semana y etapa inicial (idea / planned / in_production) en una transacción; registra cada transición implícita en el historial. `create_piece` se conserva |
+| Requisitos de envío a revisión sin cambios | Objetivo, audiencia, spec y experiencia siguen siendo obligatorios, pero la plantilla los prellena; al usuario le quedan el texto creativo y las dos casillas. No se relajó el PRODUCT_MODEL |
+| `category` y `template_id` en `content_pieces` | Trazabilidad del origen; no afectan cobertura |
+| IA generativa | **Aprobada por el propietario como siguiente paso, aún no implementada.** Requiere diseño: solo sugerencias editables, sin aprobar ni crear piezas, clave y costo de API a cargo del propietario. Cambia el canon (INV-17 y exclusiones de V0.1) y debe documentarse antes de construir |
+| Reset operativo (`scripts/reset-operational-data.sql`) | Solicitado para borrar el ejercicio de demostración; ejecución manual única del propietario. Conserva portfolio y plantillas |
+
 ## Pendiente de cotejo
 
 Estas decisiones no se cotejaron con PROJECT_INSTRUCTIONS.md, SYSTEMS_ARCHITECT.md, OPERATING_PROTOCOL.md ni SYSTEM_CONTINUITY.md (no recibidos).

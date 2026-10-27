@@ -19,6 +19,7 @@ const base = {
   scheduled_date: "2030-01-08", scheduled_time: "10:00", published_date: "2030-01-08", published_time: "10:00",
   observed_date: "2030-01-08", observed_time: "10:00", observed_status: "unknown", source_state_raw: "x",
   scope_kind: "account", source_system: "st_hub", source_entity_type: "t", source_entity_id: "1", priority: "normal",
+  category: "educativo", template_id: UUID, initial_stage: "idea", suggested_format: "post", active: "true",
 };
 const overrides = {
   verify_claim: { status: "supported" },

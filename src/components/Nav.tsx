@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/inventario", label: "Inventario" },
   { href: "/review", label: "Review Desk" },
   { href: "/publicaciones", label: "Publication Queue" },
+  { href: "/plantillas", label: "Plantillas" },
 ];
 
 export function Nav() {

@@ -87,6 +87,13 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - Pieza real: «5 Tips para crear tus instrucciones perfectas para tu proyecto» (Solotu.IA). Confirmar con el propietario si sus registros de publicación corresponden a publicaciones reales.
 - Pendiente: parte autenticada de `verify:supabase` (requiere la contraseña del propietario, que no se comparte) y recorrido de interfaz con sesión real.
 
+## Sesión 1 (cont.) · plantillas y reset
+
+- **Implementado:** plantillas en cascada (categoría → tipo), página Plantillas, creación rápida con semana y etapa inicial, guías de Words como ayuda en el packet, script de reset operativo. Migraciones nuevas `…0006_piece_templates` y `…0007_starter_templates`.
+- **Probado (PostgreSQL local):** `08_templates.sql` (14 aserciones), `07_reset.sql` (6), contrato UI↔SQL ampliado (40). Suite total 216 PASS; dominio 34 PASS; tipos y build OK.
+- **Pendiente del propietario:** aplicar migraciones 0006 y 0007 en Supabase; recorrer creación con plantilla; ejecutar el reset cuando el sistema esté listo.
+- **Pendiente de diseño:** asistencia con IA (aprobada como siguiente paso; ver ADR-002).
+
 ## Siguiente unidad
 
 1. Rodrigo: crear el proyecto Supabase siguiendo README §«Configuración de Supabase» (pasos 1–7) y compartir solo el resultado de `npm run verify:supabase` (nunca claves).
