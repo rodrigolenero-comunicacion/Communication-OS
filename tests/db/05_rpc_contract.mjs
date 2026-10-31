@@ -23,6 +23,8 @@ const base = {
   planned_date: "2030-01-08", idea: "i", origin: "own_idea", format_key: "reel", production_mode_key: "real_people",
   pillar_id: UUID, territory_id: UUID, date: "2030-01-09", make_flexible: "true", color: "blue", short_label: "X",
   axis_id: UUID, kind: "pillar", code: "P1", sort: "1", provisional: "true", source_note: "n",
+  content_origin: "event_coverage", material_status: "pending", event_name: "Evento", needs_copy: "true",
+  source_system: "st_hub", source_url: "https://hub.example.test/e/1", origin_event_coverage: "on",
 };
 const overrides = {
   verify_claim: { status: "supported" },
@@ -39,4 +41,17 @@ for (const [name, spec] of Object.entries(COMMANDS)) {
   console.log(`${same ? "PASS" : "FAIL"}: ${name} → ${spec.rpc}${same ? "" : ` envía [${[...sent]}] espera [${expected ? [...expected] : "función inexistente"}]`}`);
   if (!same) failures++;
 }
+// Forma de V0.2 (sin origen): la que usa la UI mientras 0009 no esté aplicada debe ser un
+// subconjunto de la firma, y los parámetros que omite deben tener valor por defecto en SQL.
+const defaults = Number(execFileSync("psql", ["-X", "-At", "-d", db, "-c",
+  "select pronargdefaults from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and proname = 'create_calendar_piece'"],
+  { encoding: "utf8" }).trim());
+const legacy = new FormData();
+for (const [k, v] of Object.entries(base)) if (!["content_origin"].includes(k)) legacy.set(k, v);
+const legacyKeys = new Set(["p_request_id", ...Object.keys(COMMANDS.create_calendar_piece.params(legacy))]);
+const full = signatures.get("create_calendar_piece");
+const omitted = [...full].filter((k) => !legacyKeys.has(k));
+const legacyOk = [...legacyKeys].every((k) => full.has(k)) && omitted.length === defaults;
+console.log(`${legacyOk ? "PASS" : "FAIL"}: create_calendar_piece sin origen (V0.2) sigue siendo válida (${omitted.length} omitidos, ${defaults} con default)`);
+if (!legacyOk) failures++;
 process.exit(failures ? 1 : 0);

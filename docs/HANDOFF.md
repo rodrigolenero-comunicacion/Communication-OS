@@ -137,6 +137,14 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - Plantillas por categoría (V0.1+) y formato × modo (V0.2) conviven; validar en uso antes de unificar.
 - Tarjetas en móvil se muestran como puntos de color con acceso al día; validar en uso real.
 
+## Sesión 2 (cont.) · 2026-10-31 · V0.2.1 Orígenes de contenido (Tec)
+
+- **Implementado:** selector «¿Qué quieres agregar?» por configuración de cliente (Tec: orgánico, cobertura/evento, material existente); flujo orgánico de V0.2 intacto; flujos cortos de evento (evento, formato, material, fecha, título sugerido, copy, referencia opcional) y de material existente (título, formato, origen, enlace, fecha, copy); tarjetas con «Formato · Evento/Material» y señal ⚠ Material pendiente / ✓ Material disponible / ✎ Copy pendiente; Content Bank con «Esperando material», «Listas sin fecha» para evento/material disponible y filtro por origen; ficha con sección «Origen y material» editable; Clientes con «Tipos de contenido». Ver ADR-004.
+- **Migración:** `20261031000009_content_origins.sql` **preparada**, no aplicada. Requiere 0008 aplicada antes.
+- **Pruebas (PASS):** dominio 41/41 (también `TZ=Asia/Tokyo`); PostgreSQL 278 aserciones en 12 archivos (nuevo `11_origins.sql` 19; contrato 46 incluida la compatibilidad de la firma V0.2; configuración provisional 6); typecheck y build OK.
+- **No verificado:** recorrido de interfaz con sesión real (sin PostgREST/Auth locales ni credenciales).
+- **Compatibilidad de despliegue:** sin 0009 la UI no muestra selector de origen ni la sección de material y llama `create_calendar_piece` con la firma de V0.2 (probado que sigue válida).
+
 ## Siguiente unidad
 
 1. Rodrigo: crear el proyecto Supabase siguiendo README §«Configuración de Supabase» (pasos 1–7) y compartir solo el resultado de `npm run verify:supabase` (nunca claves).

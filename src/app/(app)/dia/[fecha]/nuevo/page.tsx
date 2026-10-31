@@ -5,6 +5,8 @@ import { CommandForm } from "@/components/CommandForm";
 import { CreateContentSteps } from "@/components/calendar/CreateContentSteps";
 import { Empty } from "@/components/ui";
 import { isLocalDate } from "@/domain/time";
+import { enabledOrigins } from "@/domain/calendar";
+import { EventCoverageForm, ExistingMaterialForm, OriginChooser } from "@/components/calendar/OriginForms";
 
 const dayTitle = new Intl.DateTimeFormat("es-MX", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
 
@@ -23,6 +25,9 @@ export default async function NewContentPage({
   if (!account) notFound();
   const brand = snapshot.brands.find((b) => b.id === account.brand_id)!;
   const axes = snapshot.axes.filter((x) => x.brand_id === brand.id && x.active);
+  // V0.2.1: orígenes por configuración del cliente; sin migración 0009, solo orgánico.
+  const v021Ready = brand.content_origins !== undefined;
+  const origins = enabledOrigins(brand.content_origins);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -35,15 +40,29 @@ export default async function NewContentPage({
         {snapshot.formats.length === 0 ? (
           <Empty>Falta aplicar la migración 0008 en Supabase para crear contenido desde el calendario.</Empty>
         ) : (
-          <CommandForm command="create_calendar_piece" requestId={newRequestId()} submitLabel="Guardar" showSubmit={false}
-            hidden={{ account_id: account.id, planned_date: fecha }}>
-            <CreateContentSteps
-              formats={snapshot.formats}
-              modes={snapshot.modes}
-              pillars={axes.filter((x) => x.kind === "pillar")}
-              territories={axes.filter((x) => x.kind === "territory")}
-            />
-          </CommandForm>
+          (() => {
+            const organic = (
+              <CommandForm command="create_calendar_piece" requestId={newRequestId()} submitLabel="Guardar" showSubmit={false}
+                hidden={{ account_id: account.id, planned_date: fecha, content_origin: v021Ready ? "organic" : null }}>
+                <CreateContentSteps
+                  formats={snapshot.formats}
+                  modes={snapshot.modes}
+                  pillars={axes.filter((x) => x.kind === "pillar")}
+                  territories={axes.filter((x) => x.kind === "territory")}
+                />
+              </CommandForm>
+            );
+            // Un solo origen habilitado: directo al flujo creativo, sin selector.
+            if (origins.length === 1) return organic;
+            return (
+              <OriginChooser
+                origins={origins}
+                organic={organic}
+                event={<EventCoverageForm requestId={newRequestId()} accountId={account.id} date={fecha} formats={snapshot.formats} />}
+                material={<ExistingMaterialForm requestId={newRequestId()} accountId={account.id} date={fecha} formats={snapshot.formats} />}
+              />
+            );
+          })()
         )}
       </div>
     </div>

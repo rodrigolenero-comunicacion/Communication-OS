@@ -113,6 +113,13 @@ Historial append-only mínimo para cambios de estado no editoriales, reasignaci�
 - `planning_assignments.planned_date`: día dentro de `[week_start, week_start+7)`; si otro comando cambia la semana y el día queda fuera, se limpia.
 - Comandos: `create_calendar_piece`, `move_piece_day` (CO412 si requiere convertir en flexible), `set_brand_appearance`, `upsert_brand_axis`; `update_piece` acepta idea, formato, modo y ejes como cambios materiales.
 
+## Adiciones V0.2.1 (migración 0009, ver ADR-004)
+
+- `brands.content_origins text[]`: orígenes habilitados (orgánico siempre).
+- `content_pieces`: `content_origin` (organic | event_coverage | existing_material, default organic), `material_status` (not_required | pending | available), `needs_copy`, `event_name` (obligatorio en event_coverage), `source_system` (st_hub | onedrive | other), `source_entity_id`, `source_url` — referencias **manuales**, no sincronizadas.
+- `origin` (0008) = modo de inicio creativo del flujo orgánico; nulo en evento y material.
+- Comandos: `create_calendar_piece` con parámetros opcionales de origen/material; `set_brand_content_origins`; `update_piece` acepta evento, material, copy y referencias como cambios operativos.
+
 ## Entidades calculadas o diferidas
 
 Portfolio y PlanningWindow son vistas/objetos de dominio. Coverage, Runway, BufferHealth, ReservePool y EditorialNeed se calculan, no tienen tabla materializada. MetricSnapshot, AgentProposal, jobs, integrations y métricas quedan fuera. No guardar un measurement_status sin funcionalidad real; la medición es un eje conceptual futuro separado de producción/publicación.

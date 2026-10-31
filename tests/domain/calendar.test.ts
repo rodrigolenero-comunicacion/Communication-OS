@@ -59,3 +59,23 @@ test("día de calendario: planeado, si no publicado, si no programado", async ()
   assert.equal(canMoveByDrag({ archived: false, publications: [done] }), false);
   assert.equal(canMoveByDrag({ archived: true, publications: [] }), false);
 });
+
+test("V0.2.1: etiqueta de origen y señal de material/copy derivadas", async () => {
+  const { attentionBadge, originTag, enabledOrigins } = await import("../../src/domain/calendar.ts");
+  assert.equal(originTag("event_coverage"), "Evento");
+  assert.equal(originTag("existing_material"), "Material");
+  assert.equal(originTag("organic"), null);
+  const base = { publications: [] };
+  assert.equal(attentionBadge({ ...base, contentOrigin: "event_coverage", materialStatus: "pending" })?.label, "Material pendiente");
+  assert.equal(attentionBadge({ ...base, contentOrigin: "event_coverage", materialStatus: "available" })?.label, "Material disponible");
+  assert.equal(attentionBadge({ ...base, contentOrigin: "existing_material", materialStatus: "available", needsCopy: true })?.label, "Copy pendiente");
+  assert.equal(attentionBadge({ ...base, contentOrigin: "organic", materialStatus: "not_required" }), null);
+  assert.equal(attentionBadge({ ...base, contentOrigin: "organic", materialStatus: "pending" })?.tone, "warn");
+  assert.equal(attentionBadge({ contentOrigin: "event_coverage", materialStatus: "pending", publications: [pub("x", { status: "scheduled" })] }), null);
+  assert.equal(attentionBadge({ ...base }), null); // datos previos a 0009
+  // Selector por cliente: Tec configurado con tres; otros y datos previos, solo orgánico.
+  assert.deepEqual(enabledOrigins(["event_coverage", "existing_material", "organic"]), ["organic", "event_coverage", "existing_material"]);
+  assert.deepEqual(enabledOrigins(["organic"]), ["organic"]);
+  assert.deepEqual(enabledOrigins(undefined), ["organic"]);
+  assert.deepEqual(enabledOrigins(["existing_material", "inventado"]), ["organic", "existing_material"]);
+});

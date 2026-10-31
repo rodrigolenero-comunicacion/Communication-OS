@@ -1,4 +1,4 @@
-import { calendarDateOf, canMoveByDrag, cardStatus } from "@/domain/calendar";
+import { attentionBadge, calendarDateOf, canMoveByDrag, cardStatus, originTag, type AttentionBadge, type ContentOrigin } from "@/domain/calendar";
 import type { LocalDate } from "@/domain/time";
 import type { Snapshot } from "@/infrastructure/data";
 
@@ -21,6 +21,11 @@ export interface CardData {
   statusKey: string;
   movable: boolean;
   timingMode: string;
+  contentOrigin: ContentOrigin;
+  originTag: string | null;
+  eventName: string | null;
+  /** Señal de material/copy que tiene prioridad visual sobre el estado de producción. */
+  attention: AttentionBadge | null;
 }
 
 /** Construye las tarjetas de piezas no archivadas a partir de la lectura coherente. */
@@ -58,6 +63,12 @@ export function buildCards(snapshot: Snapshot): CardData[] {
         statusKey: status.key,
         movable: canMoveByDrag(f),
         timingMode: f.timing.mode,
+        contentOrigin: row.content_origin ?? "organic",
+        originTag: originTag(row.content_origin),
+        eventName: row.event_name ?? null,
+        attention: attentionBadge({
+          contentOrigin: row.content_origin, materialStatus: row.material_status, needsCopy: row.needs_copy, publications: f.publications,
+        }),
       };
     });
 }

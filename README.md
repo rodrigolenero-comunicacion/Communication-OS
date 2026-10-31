@@ -31,7 +31,7 @@ Usa un proyecto **nuevo y exclusivo** de Content OS; no reutilices el de ST Hub.
 1. **Crear proyecto** en supabase.com (región cercana, p. ej. us-east). Guarda la contraseña de la base en tu gestor, no en el repo.
 2. **Auth → Sign In / Providers**: deja habilitado *Email*; desactiva **Allow new users to sign up**.
 3. **Auth → Users → Add user → Create new user**: tu correo y una contraseña fuerte, marcando *Auto Confirm User*.
-4. **SQL Editor**: ejecuta, en orden, el contenido de cada archivo de `supabase/migrations/` (`…0001_schema.sql` → `20261031000008_calendar_first.sql`). Alternativa: Supabase CLI con `supabase link` y `supabase db push`.
+4. **SQL Editor**: ejecuta, en orden, el contenido de cada archivo de `supabase/migrations/` (`…0001_schema.sql` → `20261031000009_content_origins.sql`). Alternativa: Supabase CLI con `supabase link` y `supabase db push`.
 5. **SQL Editor**: autoriza tu usuario (única fila activa permitida):
    ```sql
    insert into public.authorized_users (user_id)

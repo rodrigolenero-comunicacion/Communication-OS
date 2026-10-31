@@ -111,3 +111,56 @@ export function calendarDateOf(piece: Pick<PieceFact, "plannedDate" | "publicati
 export function canMoveByDrag(piece: Pick<PieceFact, "archived" | "publications">): boolean {
   return !piece.archived && !piece.publications.some((p) => p.status === "scheduled" || p.status === "published");
 }
+
+// Orígenes de contenido (V0.2.1) ----------------------------------------------
+
+export type ContentOrigin = "organic" | "event_coverage" | "existing_material";
+export type MaterialStatus = "not_required" | "pending" | "available";
+
+export const CONTENT_ORIGINS: readonly ContentOrigin[] = ["organic", "event_coverage", "existing_material"];
+
+export const ORIGIN_LABEL: Record<ContentOrigin, string> = {
+  organic: "Contenido orgánico",
+  event_coverage: "Cobertura / evento",
+  existing_material: "Material ya existente",
+};
+
+/** Etiqueta corta del origen en la tarjeta; el orgánico no se rotula para no saturar. */
+export function originTag(origin: ContentOrigin | null | undefined): string | null {
+  if (origin === "event_coverage") return "Evento";
+  if (origin === "existing_material") return "Material";
+  return null;
+}
+
+/** Orígenes habilitados para un cliente según su configuración; orgánico siempre y primero. */
+export function enabledOrigins(configured: readonly string[] | null | undefined): ContentOrigin[] {
+  const set = new Set((configured ?? []).filter((o): o is ContentOrigin => (CONTENT_ORIGINS as readonly string[]).includes(o)));
+  return CONTENT_ORIGINS.filter((o) => o === "organic" || set.has(o));
+}
+
+export interface AttentionBadge {
+  symbol: string;
+  label: string;
+  tone: "warn" | "good";
+}
+
+/**
+ * Señal de material/copy derivada (no modifica production_status). Programada o publicada
+ * manda sobre esta señal. Material pendiente nunca aparenta estar listo.
+ */
+export function attentionBadge(piece: {
+  contentOrigin?: ContentOrigin | null;
+  materialStatus?: MaterialStatus | null;
+  needsCopy?: boolean | null;
+  publications: Pick<PieceFact["publications"][number], "status">[];
+}): AttentionBadge | null {
+  if (piece.publications.some((p) => p.status === "published" || p.status === "scheduled")) return null;
+  if (piece.materialStatus === "pending") return { symbol: "⚠", label: "Material pendiente", tone: "warn" };
+  const fromOutside = piece.contentOrigin === "event_coverage" || piece.contentOrigin === "existing_material";
+  if (fromOutside && piece.materialStatus === "available") {
+    return piece.needsCopy
+      ? { symbol: "✎", label: "Copy pendiente", tone: "warn" }
+      : { symbol: "✓", label: "Material disponible", tone: "good" };
+  }
+  return null;
+}

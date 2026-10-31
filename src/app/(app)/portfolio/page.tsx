@@ -49,6 +49,16 @@ export default async function PortfolioPage() {
                       <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={brand.active} /> Activo</label>
                     </CommandForm>
                   </Details>
+                  {brand.content_origins !== undefined && (
+                    <Details summary="Tipos de contenido">
+                      <CommandForm command="set_brand_content_origins" requestId={newRequestId()} hidden={{ brand_id: brand.id, expected_version: brand.version }} submitLabel="Guardar">
+                        <p className="text-xs text-muted">Define qué opciones aparecen en «+ Agregar contenido» para este cliente.</p>
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked disabled readOnly /> Contenido orgánico (siempre)</label>
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="origin_event_coverage" defaultChecked={brand.content_origins.includes("event_coverage")} /> Cobertura / evento</label>
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="origin_existing_material" defaultChecked={brand.content_origins.includes("existing_material")} /> Material ya existente</label>
+                      </CommandForm>
+                    </Details>
+                  )}
                   {snapshot.formats.length > 0 && (
                     <Details summary="Apariencia">
                       <CommandForm command="set_brand_appearance" requestId={newRequestId()} hidden={{ brand_id: brand.id, expected_version: brand.version }} submitLabel="Guardar">

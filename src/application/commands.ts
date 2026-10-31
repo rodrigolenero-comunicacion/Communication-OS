@@ -5,7 +5,7 @@ import { isLocalDate, localDateTime } from "../domain/time.ts";
 
 export class InputError extends Error {}
 
-type Params = Record<string, string | number | boolean | null | Record<string, unknown>>;
+type Params = Record<string, string | number | boolean | null | string[] | Record<string, unknown>>;
 
 export interface CommandSpec {
   rpc: string;
@@ -71,6 +71,9 @@ const WORD_KEYS = ["hook", "on_screen", "final_line", "caption", "cta"] as const
 export const CLIENT_COLORS = ["blue", "yellow", "purple", "green", "red", "teal", "orange", "pink", "gray"] as const;
 const ORIGINS = ["own_idea", "develop", "generate", "research", "library"] as const;
 const CATALOG_KEY = /^[a-z0-9_]+$/;
+const CONTENT_ORIGIN_KEYS = ["organic", "event_coverage", "existing_material"] as const;
+const MATERIAL_STATUSES = ["not_required", "pending", "available"] as const;
+const SOURCE_REF_SYSTEMS = ["st_hub", "onedrive", "other"] as const;
 function catalogKey(fd: FormData, name: string, optional = false): string | null {
   const v = text(fd, name);
   if (v === null && optional) return null;
@@ -152,7 +155,20 @@ export const COMMANDS: Record<string, CommandSpec> = {
       p_title: text(fd, "title"), p_idea: text(fd, "idea"), p_origin: oneOf(fd, "origin", ORIGINS, true) ?? "own_idea",
       p_format_key: catalogKey(fd, "format_key"), p_production_mode_key: catalogKey(fd, "production_mode_key"),
       p_pillar_id: uuid(fd, "pillar_id", true), p_territory_id: uuid(fd, "territory_id", true),
-      p_bucket: oneOf(fd, "bucket", BUCKETS, true) ?? "feed" }),
+      p_bucket: oneOf(fd, "bucket", BUCKETS, true) ?? "feed",
+      // V0.2.1: solo si el formulario los trae (migración 0009 aplicada); la firma de V0.2 sigue válida.
+      ...(fd.has("content_origin")
+        ? { p_content_origin: oneOf(fd, "content_origin", CONTENT_ORIGIN_KEYS),
+            p_material_status: oneOf(fd, "material_status", MATERIAL_STATUSES, true),
+            p_needs_copy: bool(fd, "needs_copy"), p_event_name: text(fd, "event_name"),
+            p_source_system: oneOf(fd, "source_system", SOURCE_REF_SYSTEMS, true),
+            p_source_entity_id: text(fd, "source_entity_id"), p_source_url: text(fd, "source_url") }
+        : {}) }),
+  },
+  set_brand_content_origins: {
+    rpc: "set_brand_content_origins", success: "Orígenes guardados",
+    params: (fd) => ({ p_brand_id: uuid(fd, "brand_id"), p_expected_version: int(fd, "expected_version"),
+      p_origins: CONTENT_ORIGIN_KEYS.filter((o) => bool(fd, `origin_${o}`)) }),
   },
   move_piece_day: {
     rpc: "move_piece_day", success: "Fecha actualizada",
@@ -213,6 +229,12 @@ export const COMMANDS: Record<string, CommandSpec> = {
       if (fd.has("production_mode_key")) changes.production_mode_key = catalogKey(fd, "production_mode_key", true) ?? "";
       if (fd.has("pillar_id")) changes.pillar_id = uuid(fd, "pillar_id", true) ?? "";
       if (fd.has("territory_id")) changes.territory_id = uuid(fd, "territory_id", true) ?? "";
+      if (fd.has("event_name")) changes.event_name = text(fd, "event_name") ?? "";
+      if (fd.has("material_status")) changes.material_status = oneOf(fd, "material_status", MATERIAL_STATUSES);
+      if (fd.has("needs_copy_present")) changes.needs_copy = bool(fd, "needs_copy");
+      if (fd.has("source_system")) changes.source_system = oneOf(fd, "source_system", SOURCE_REF_SYSTEMS, true) ?? "";
+      if (fd.has("source_entity_id")) changes.source_entity_id = text(fd, "source_entity_id") ?? "";
+      if (fd.has("source_url")) changes.source_url = text(fd, "source_url") ?? "";
       if (fd.has("timing_mode")) {
         const t = timing(fd);
         Object.assign(changes, { timing_mode: t.p_timing_mode, fixed_date: t.p_fixed_date ?? "",

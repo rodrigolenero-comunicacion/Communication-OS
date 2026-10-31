@@ -1,6 +1,7 @@
 // Lectura bajo RLS con la sesión del usuario y mapeo a hechos de dominio.
 // Los cálculos (cobertura, runway, reserva) se hacen después, en src/domain.
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ContentOrigin, MaterialStatus } from "@/domain/calendar";
 import type {
   AccountFact,
   Bucket,
@@ -17,6 +18,8 @@ export type ClientColor = "blue" | "yellow" | "purple" | "green" | "red" | "teal
 export interface BrandRow {
   id: string; name: string; slug: string; active: boolean; version: number;
   color?: ClientColor; short_label?: string | null;
+  /** V0.2.1: orígenes habilitados; ausente si la migración 0009 no está aplicada. */
+  content_origins?: string[];
 }
 export interface CatalogRow { key: string; label: string; sort: number; active: boolean }
 export interface AxisRow {
@@ -45,6 +48,8 @@ export interface PieceRow {
   category: Category | null; template_id: string | null;
   idea?: string | null; origin?: string | null; format_key?: string | null; production_mode_key?: string | null;
   pillar_id?: string | null; territory_id?: string | null;
+  content_origin?: ContentOrigin; material_status?: MaterialStatus; needs_copy?: boolean; event_name?: string | null;
+  source_system?: "st_hub" | "onedrive" | "other" | null; source_entity_id?: string | null; source_url?: string | null;
 }
 export type Category = "conectar" | "educativo" | "cobertura" | "institucional" | "promocional";
 export interface TemplateRow {

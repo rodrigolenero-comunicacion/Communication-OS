@@ -6,7 +6,7 @@ import { CATEGORY_LABEL } from "@/components/NewPieceFields";
 import { PacketView } from "@/components/PacketView";
 import { PublicationPanel } from "@/components/PublicationPanel";
 import { MoveDateControl } from "@/components/calendar/MoveDateControl";
-import { calendarDateOf, canMoveByDrag } from "@/domain/calendar";
+import { ORIGIN_LABEL, calendarDateOf, canMoveByDrag } from "@/domain/calendar";
 import { TimingFields } from "@/components/TimingFields";
 import {
   BUCKET_LABEL,
@@ -22,6 +22,8 @@ import {
 import { Badge, Card, Details, Empty, Field, PageHeader, SafeLink, Section } from "@/components/ui";
 import { hasCurrentApproval } from "@/domain/pieces";
 import type { ProductionStatus } from "@/domain/types";
+
+const SOURCE_REF_LABEL: Record<string, string> = { st_hub: "Communication Hub", onedrive: "OneDrive", other: "Otro" };
 
 const EDITABLE: ProductionStatus[] = ["idea", "planned", "in_production", "changes_requested"];
 
@@ -130,6 +132,58 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
                     <p className="mb-2 text-sm text-muted">Invalida la aprobación vigente. Solo si no hay destinos programados ni publicados.</p>
                     <CommandForm command="reopen_approved" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel="Reabrir" tone="danger">
                       <Field label="Motivo"><input name="reason" required className="input" /></Field>
+                    </CommandForm>
+                  </Details>
+                </div>
+              )}
+            </Section>
+          )}
+
+          {piece.content_origin !== undefined && (
+            <Section title="Origen y material" description="Cambios operativos: no invalidan la revisión.">
+              <p className="text-sm">
+                <strong>{ORIGIN_LABEL[piece.content_origin]}</strong>
+                {piece.event_name && <> · Evento: {piece.event_name}</>}
+                {" · "}
+                {piece.material_status === "pending" ? <span className="text-warn">⚠ Material pendiente</span>
+                  : piece.material_status === "available" ? <span className="text-good">✓ Material disponible</span> : "No depende de material externo"}
+                {piece.needs_copy && <span className="text-warn"> · ✎ Copy pendiente</span>}
+              </p>
+              {piece.material_status === "pending" && (
+                <p className="mt-1 text-xs text-muted">Mientras el material esté pendiente, la pieza no está lista para publicar.</p>
+              )}
+              {(piece.source_system || piece.source_url || piece.source_entity_id) && (
+                <p className="mt-1 text-xs text-muted">
+                  Referencia manual (no sincronizada): {SOURCE_REF_LABEL[piece.source_system ?? "other"]}
+                  {piece.source_entity_id && <> · ID {piece.source_entity_id}</>}
+                  {piece.source_url && <> · <SafeLink href={piece.source_url}>Abrir enlace</SafeLink></>}
+                </p>
+              )}
+              {!piece.archived_at && (
+                <div className="mt-3 max-w-xl">
+                  <Details summary="Editar origen y material">
+                    <CommandForm command="update_piece" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v, needs_copy_present: "1" }} submitLabel="Guardar">
+                      {piece.content_origin === "event_coverage" && (
+                        <Field label="Evento"><input name="event_name" defaultValue={piece.event_name ?? ""} required className="input" /></Field>
+                      )}
+                      <Field label="Material">
+                        <select name="material_status" defaultValue={piece.material_status} className="input">
+                          <option value="not_required">No depende de material externo</option>
+                          <option value="pending">Pendiente</option>
+                          <option value="available">Disponible</option>
+                        </select>
+                      </Field>
+                      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="needs_copy" defaultChecked={piece.needs_copy} /> Necesita copy</label>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <Field label="Sistema (referencia)">
+                          <select name="source_system" defaultValue={piece.source_system ?? ""} className="input">
+                            <option value="">No indicar</option>
+                            {Object.entries(SOURCE_REF_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+                          </select>
+                        </Field>
+                        <Field label="ID"><input name="source_entity_id" defaultValue={piece.source_entity_id ?? ""} className="input" /></Field>
+                        <Field label="Enlace"><input name="source_url" type="url" defaultValue={piece.source_url ?? ""} className="input" /></Field>
+                      </div>
                     </CommandForm>
                   </Details>
                 </div>
