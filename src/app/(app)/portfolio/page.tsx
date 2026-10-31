@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loadContext, newRequestId } from "@/application/context";
 import type { AxisRow } from "@/infrastructure/data";
 import { CommandForm } from "@/components/CommandForm";
@@ -41,6 +42,10 @@ export default async function PortfolioPage() {
                     {brand.name} <span className="client-tag text-sm">{brand.short_label}</span>
                   </h3>
                   {!brand.active && <Badge>Inactivo</Badge>}
+                  <p className="mt-1 flex gap-3 text-sm">
+                    <Link href={`/portfolio/${brand.slug}/brain`} className="underline">Brain</Link>
+                    <Link href={`/portfolio/${brand.slug}/fuentes`} className="underline">Fuentes</Link>
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Details summary="Editar cliente">

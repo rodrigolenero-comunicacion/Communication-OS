@@ -54,3 +54,13 @@ test("fuentes por estado y por cliente", () => {
   assert.equal(g.provisional.length, 0);
   assert.deepEqual(sourcesByStatus(sources, "tec").provisional.map((s) => s.id), ["tec"]);
 });
+
+test("fuentes de ámbito cuenta cuentan solo si la cuenta es del cliente", () => {
+  const src = [
+    { id: "a", brand_id: null, account_id: "acc-ijlv", scope_kind: "account", relation_kind: "context_reference" },
+    { id: "b", brand_id: null, account_id: "acc-tec", scope_kind: "account", relation_kind: "context_reference" },
+  ];
+  const g = sourcesByStatus(src, "ijlv", ["acc-ijlv"]);
+  assert.deepEqual(g.active.map((s) => s.id), ["a"]);
+  assert.equal(sourcesByStatus(src, "ijlv").active.length, 0);
+});

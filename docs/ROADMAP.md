@@ -1,6 +1,6 @@
 # Roadmap
 
-Versión activa: **V0.2 Calendar-First Editorial Studio** (activa en producción desde el 2026-10-31). V0.2.1 implementada, pendiente de activación (0009).
+Versión activa: **V0.2 Calendar-First Editorial Studio** (activa en producción desde el 2026-10-31) con V0.2.1 cerrada. V0.3 Client Brain implementada en código, pendiente de aplicar 0010/0011.
 Dirección vigente desde 2026-10-31: **Calendar-First Editorial Studio** (instrucción del propietario). Ver [AUDIT_V0_2.md](AUDIT_V0_2.md).
 
 ## Ahora: V0.2 — Calendar-First Editorial Studio (propuesta, pendiente de decisiones D1–D4)
@@ -13,9 +13,12 @@ Estado: implementada; reset operativo ejecutado y migración 0008 aplicada por e
 
 Orgánico, cobertura/evento y material existente sin duplicar Communication Hub (ADR-004). 0009 aplicada; activa; cerrada y verificada con sesión real (2026-10-31).
 
+## V0.3 — Client Brain + Sources
+
+Brain por cliente (estrategia, audiencias, voz, reglas, claims, aprendizajes, pilares/territorios) con fuentes trazables y estados activa/provisional/superseded/archivada (ADR-005). Código listo; 0010 y 0011 preparadas, pendientes de aplicación manual. La revisión pedagógica IJLV por nivel queda para una fase posterior.
+
 ## Después (orden tentativo, cada fase con diseño y autorización propios)
 
-1. **V0.3 — Client Brain y fuentes:** identidad, audiencias, pilares/territorios, voz, reglas de producción y evidencia por cliente; fuentes con institución, fecha de acceso, claim soportado y crédito en pantalla; revisión pedagógica IJLV por nivel.
 2. **V0.4 — Content Package por formato y modo:** Escaleta Vives, real + gráficos, motion (storyboard, timing, sonido), carruseles y Reels.
 3. **V0.5 — Bibliotecas:** Ideas (incluido el banco IJLV de +60), Patterns abstractos sin identidad de marca, References, Produced.
 4. **V0.6 — Generación asistida con IA:** sugerencias editables; IA ≠ aprobación; clave y costo a cargo del propietario.

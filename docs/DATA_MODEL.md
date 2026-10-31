@@ -120,6 +120,15 @@ Historial append-only mínimo para cambios de estado no editoriales, reasignaci�
 - `origin` (0008) = modo de inicio creativo del flujo orgánico; nulo en evento y material.
 - Comandos: `create_calendar_piece` con parámetros opcionales de origen/material; `set_brand_content_origins`; `update_piece` acepta evento, material, copy y referencias como cambios operativos.
 
+## Adiciones V0.3 (migraciones 0010 esquema y 0011 carga, ver ADR-005)
+
+- `source_references` (fuentes de cliente = `relation_kind 'context_reference'`): `institution`, `source_type` (institutional_document | internal_system | web | research | decision | reference | other), `document_name`, `document_version`, `accessed_at`, `published_at`, `status` (active | superseded | provisional | archived), `notes`, `version`, `updated_at`.
+- `claims.on_screen_credit`: crédito en pantalla del claim de pieza.
+- `brand_axes.source_reference_id`: fuente del pilar/territorio; trigger impide fuentes de otro cliente.
+- `brain_entries`: `brand_id`, `account_id` opcional (de ese cliente), `category` (identity | audience | segment | objective | strategy | voice | editorial_rule | production_rule | evidence_rule | review_rule | constraint | claim | learning), `key` (única por cliente/categoría entre activas), `title`, `content`, `status` (active | superseded | archived), `provisional`, `claim_status` (obligatorio solo en `claim`; provisional ⇔ claim_status provisional), `source_reference_id` (de ese cliente o pública general), `source_locator`, `valid_from`/`valid_until`, `sort`, `version`. Pilares y territorios **no** son entradas: siguen en `brand_axes`.
+- `app.source_in_brand(fuente, cliente)`: una fuente vale para un cliente si es de su marca, de una de sus cuentas o pública general.
+- Comandos: `upsert_brand_source` (ámbito marca; no se traslada entre clientes) y `upsert_brain_entry` (cliente y categoría inmutables). RLS: solo lectura para usuario autorizado.
+
 ## Entidades calculadas o diferidas
 
 Portfolio y PlanningWindow son vistas/objetos de dominio. Coverage, Runway, BufferHealth, ReservePool y EditorialNeed se calculan, no tienen tabla materializada. MetricSnapshot, AgentProposal, jobs, integrations y métricas quedan fuera. No guardar un measurement_status sin funcionalidad real; la medición es un eje conceptual futuro separado de producción/publicación.

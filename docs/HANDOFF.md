@@ -14,6 +14,10 @@ Fecha: 2026-10-27. Estado: **parcialmente implementado — listo para conectar S
 
 **Corrección V0.2.1 (smoke real, 2026-10-31):** «Elige una opción: production_mode_key» al guardar Cobertura/evento. Causa raíz: el registro de comandos de la app (`src/application/commands.ts`) exigía el modo para todos los orígenes; la función SQL de la 0009 ya lo condicionaba al origen. Corregido solo en la app; **sin migración nueva** (0009 sin cambios). Pruebas: `tests/domain/commands.test.ts` (reproduce el fallo) y `tests/db/12_command_roundtrip.mjs` (formulario → SQL real).
 
+| Migración `20261031000010_client_brain.sql` (V0.3, esquema y comandos) | **Preparada, no aplicada** |
+| Migración `20261031000011_client_brain_seed.sql` (V0.3, carga inicial) | **Preparada, no aplicada** (aplicar después de la 0010) |
+| V0.3 Client Brain + Sources | Implementada en código y probada localmente; sin recorrido con sesión real |
+
 Las secciones siguientes son el registro histórico de cada sesión; donde digan «0008 no aplicada» o «reset pendiente», prevalece esta tabla.
 
 ## Sesión 1 · 2026-10-27
@@ -159,12 +163,25 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - **No verificado:** recorrido de interfaz con sesión real (sin PostgREST/Auth locales ni credenciales).
 - **Compatibilidad de despliegue:** sin 0009 la UI no muestra selector de origen ni la sección de material y llama `create_calendar_piece` con la firma de V0.2 (probado que sigue válida).
 
+## Sesión 3 · 2026-10-31 · V0.3 Client Brain + Sources
+
+- **Reutilización (ADR-005):** fuentes = `source_references` ampliada (no tabla nueva); pilares/territorios siguen en `brand_axes` (+ fuente); claims de pieza en `claims` (+ crédito en pantalla); historial en `operation_events`. Única tabla nueva: `brain_entries`.
+- **Implementado:** esquema, aislamiento entre clientes en la base (triggers + `app.source_in_brand`), comandos `upsert_brand_source` / `upsert_brain_entry` con versión e idempotencia; dominio puro `src/domain/brain.ts` (`brainView`, `sourcesByStatus`); UI Clientes → cliente → **Brain** (`/portfolio/[slug]/brain`: Estrategia, Pilares y territorios, Audiencias, Voz, Reglas plegadas por tipo, Claims/Aprendizajes si existen, resumen de fuentes; filtros Vigente / Solo provisionales / Todo; cada entrada muestra su fuente, versión y estado; alta y edición) y **Fuentes** (`/portfolio/[slug]/fuentes`: Activas, Provisionales, Superseded, Archivadas con título, institución, tipo, versión, estado, fecha de consulta y usos; alta y edición). Texto «V0.1» corregido en Operación y en la descripción de la app.
+- **Carga inicial (0011):** IJLV (v1.4 activa + v1.2 superseded; identidad, estrategia, audiencias, 4 segmentos, reglas; P1–P4 y 4 territorios), Tec (Communication Hub, decisiones del propietario, ejes D3 provisionales; 5 de voz + 8 editoriales + frontera Hub), Solotu (Solotu_Cerebro; 6 entradas). **Procedencia: texto de la instrucción V0.3**; v1.4 y `Solotu_Contexto_v2.md` no están en el repo y sus notas lo declaran. Objetivo Solotu 5/semana **sin tocar**. Sin piezas creadas.
+- **Pruebas (PASS):** dominio 53/53 (también `TZ=Asia/Tokyo`); PostgreSQL 333 aserciones en 14 archivos (nuevo `13_brain.sql` 25; `10_provisional_config.mjs` 17 con la carga; `12_command_roundtrip.mjs` 14 con formularios del Brain; contrato 48); typecheck y build OK (rutas nuevas protegidas: redirigen a `/login` sin sesión).
+- **No verificado:** recorrido de interfaz con sesión real; aplicación de 0010/0011 en Supabase.
+
+**Orden de aplicación para el propietario (SQL Editor de Supabase)**
+1. `supabase/migrations/20261031000010_client_brain.sql`.
+2. `supabase/migrations/20261031000011_client_brain_seed.sql`.
+3. Comprobación: `select b.slug, count(e.*) from public.brands b left join public.brain_entries e on e.brand_id = b.id group by 1;` → esperado ijlv 31, tec 14, solotu 6 (medido aplicando 0010+0011 sobre una base local) (si un cliente sale en 0, su `slug` no coincide y la carga lo omitió).
+
 ## Siguiente unidad (vigente)
 
-Sin trabajo abierto. Pendientes conocidos, sin implementar hasta indicación del propietario:
-- Objetivo de prueba 5/semana de Solotu.IA sigue activo (retirarlo en Clientes si no es real).
-- Texto de Operación menciona «V0.1» en el aviso de Stories (cosmético).
-- IJLV Sistema Editorial v1.4 no recibido; ejes Tec provisionales sin validar.
+1. Rodrigo: aplicar 0010 y 0011 y recorrer Clientes → IJLV → Brain / Fuentes, Tec y Solotu (criterios 1–16 de la instrucción V0.3) + regresión de calendario, Day Studio, orígenes, Content Bank y ficha.
+2. Subir al repo el Sistema Editorial IJLV v1.4 y `Solotu_Contexto_v2.md` para cotejar la carga.
+3. Validar los ejes Tec provisionales contra fuente institucional.
+- Pendiente conocido sin tocar: objetivo de prueba 5/semana de Solotu.IA.
 
 ## Siguiente unidad (histórico de sesión 1)
 

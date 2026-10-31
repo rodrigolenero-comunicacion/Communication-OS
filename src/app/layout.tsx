@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Content OS",
-  description: "Cockpit editorial personal — V0.1 Manual Control Tower",
+  description: "Cockpit editorial personal — calendario, banco y Client Brain",
   robots: { index: false, follow: false },
 };
 

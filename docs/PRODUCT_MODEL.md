@@ -16,6 +16,10 @@ PlanningWindow es una semana local lunes 00:00 inclusive → lunes siguiente 00:
 
 El calendario muestra cada pieza no archivada en su día: el día planeado o, si no existe, el de su primera publicación confirmada o programada. Sin fecha, la pieza vive en el Content Bank. Mover de día sigue D1 (ADR-003): libre si es flexible; fuera de fecha fija o ventana solo con «Mover y convertir en flexible»; bloqueado con publicación programada o confirmada. El estado de la tarjeta se deriva de los estados existentes; no hay una segunda máquina de estados.
 
+## Client Brain y fuentes (V0.3)
+
+Cada cliente tiene un Brain: conocimiento estructurado (identidad, estrategia, objetivos, audiencias y segmentos, voz, reglas editoriales/de producción/de evidencia/de revisión, restricciones, claims y aprendizajes) y sus pilares/territorios. Cada dato puede citar su fuente (con localizador). Las fuentes tienen estado: **activa** (vigente), **provisional** (pendiente de validar), **superseded** (reemplazada; historial) y **archivada**. Lo provisional se marca siempre. Un cliente nunca ve ni usa fuentes o entradas de otro. El Brain describe; no genera contenido, no aprueba y no sincroniza con los sistemas fuente (ST Hub, Sistema Editorial IJLV, Solotu_Cerebro siguen siendo la autoridad). Se consulta en Clientes → cliente → Brain / Fuentes.
+
 ## Pieza, asignación y publicación
 
 ContentPiece contiene título, cuenta, bucket, tipo de contenido, objetivo, audiencia, rol editorial libre, campaña/tema, responsable libre, vencimiento, prioridad y material de revisión. No imponer taxonomía estratégica universal.

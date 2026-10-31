@@ -7,9 +7,10 @@ Estado: contrato de V0.1 (2026-10-27), con cambio de dirección a Calendar-First
 | | Contenido |
 |---|---|
 | Versión activa | **V0.2 Calendar-First Editorial Studio**: activa en producción y en uso por el propietario (reset operativo ejecutado y 0008 aplicada, confirmados por el propietario el 2026-10-31) |
-| Última entrega | **V0.2.1 Orígenes de contenido (Tec)**: 0009 aplicada; cerrada y verificada con sesión real por el propietario (2026-10-31) |
+| Entregas cerradas | **V0.2.1 Orígenes de contenido (Tec)**: 0009 aplicada; cerrada y verificada con sesión real por el propietario (2026-10-31) |
+| Última entrega | **V0.3 Client Brain + Sources** (ADR-005): código listo; migraciones 0010 y 0011 **preparadas, no aplicadas** |
 | Decisión | Evolucionar el sistema actual, sin reconstrucción ([AUDIT_V0_2.md](AUDIT_V0_2.md), ADR-003, ADR-004) |
-| Pendiente | documento IJLV v1.4 (vigente, no recibido); validar ejes Tec provisionales contra fuente institucional |
+| Pendiente | documento IJLV v1.4 (vigente, no recibido: el Brain IJLV se cargó del texto de la instrucción V0.3, sin cotejo); `Solotu_Contexto_v2.md` no recibido; validar ejes Tec provisionales contra fuente institucional |
 | Hipótesis | Las plantillas por categoría convivirán con formato × modo de producción hasta validar en uso |
 
 Los invariantes de abajo siguen vigentes. Las exclusiones de V0.1 (IA, investigación, integraciones) se mantienen en V0.2; la IA está aprobada como fase posterior con regla «IA ≠ aprobación».
@@ -31,6 +32,8 @@ Un usuario autorizado, Rodrigo. Portfolio inicial: Tec de Monterrey (Campus Pueb
 | Producción/revisión de piezas creadas y gestionadas localmente | Content OS |
 | Estado de objetos externos | Sistema propietario; Content OS conserva observaciones atribuidas |
 | Publicación real | Plataforma externa; V0.1 registra confirmación humana |
+
+El Client Brain (V0.3) es una representación atribuida del conocimiento de cada cliente: cada dato cita su fuente, lo provisional se marca y no se mezclan clientes. No sustituye ni sincroniza a los sistemas fuente.
 
 Una referencia contextual de IJLV o Solotu no convierte por sí sola una pieza local en objeto externo. Ownership se declara por objeto; no se infiere solo de la marca. Cada fuente aplica únicamente a su sistema/cliente. Los manuales no son doctrina global; el protocolo transversal de Systems Architect queda pendiente de cotejo con los archivos aún no recibidos.
 

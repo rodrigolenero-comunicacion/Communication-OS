@@ -49,7 +49,7 @@ export default async function OperationPage() {
         subtitle={
           <>
             Calculado {fmtInstant(now)}. Unidad: <strong>piezas editoriales semanales</strong> por cuenta y bucket. Una pieza
-            publicada en IG y FB cuenta una vez; no mide cumplimiento por canal. La cadencia diaria de Stories no se evalúa en V0.1.
+            publicada en IG y FB cuenta una vez; no mide cumplimiento por canal. La cadencia diaria de Stories no se evalúa en esta vista.
           </>
         }
       />

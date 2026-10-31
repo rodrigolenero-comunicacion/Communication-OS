@@ -58,18 +58,46 @@ export function brainView<T extends BrainEntryLike>(
   return BRAIN_SECTIONS.map((s) => ({ key: s.key, title: s.title, entries: mine.filter((e) => s.categories.includes(e.category)) }));
 }
 
+export const SOURCE_STATUS_LABEL: Record<SourceStatus, string> = {
+  active: "Activa",
+  superseded: "Superseded",
+  provisional: "Provisional",
+  archived: "Archivada",
+};
+
+export const SOURCE_TYPE_LABEL: Record<string, string> = {
+  institutional_document: "Documento institucional",
+  internal_system: "Sistema interno",
+  web: "Web",
+  research: "Investigación",
+  decision: "Decisión del propietario",
+  reference: "Referencia",
+  other: "Otro",
+};
+
 export interface SourceLike {
   id: string;
   brand_id: string | null;
+  account_id?: string | null;
+  scope_kind?: string;
   relation_kind: string;
   status?: SourceStatus;
 }
 
-/** Fuentes del cliente agrupadas por estado (datos previos a V0.3 cuentan como activas). */
-export function sourcesByStatus<T extends SourceLike>(sources: readonly T[], brandId: string): Record<SourceStatus, T[]> {
+/**
+ * Fuentes del cliente agrupadas por estado (datos previos a V0.3 cuentan como activas).
+ * Incluye las de ámbito cuenta solo si la cuenta está en `accountIds` (cuentas de ese cliente).
+ */
+export function sourcesByStatus<T extends SourceLike>(
+  sources: readonly T[],
+  brandId: string,
+  accountIds: readonly string[] = [],
+): Record<SourceStatus, T[]> {
   const out: Record<SourceStatus, T[]> = { active: [], superseded: [], provisional: [], archived: [] };
   for (const s of sources) {
-    if (s.relation_kind !== "context_reference" || s.brand_id !== brandId) continue;
+    if (s.relation_kind !== "context_reference") continue;
+    const mine = s.brand_id === brandId || (s.scope_kind === "account" && !!s.account_id && accountIds.includes(s.account_id));
+    if (!mine) continue;
     out[s.status ?? "active"].push(s);
   }
   return out;
