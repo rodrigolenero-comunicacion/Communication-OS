@@ -8,7 +8,7 @@ Content OS es el cockpit editorial personal que coordina cinco cuentas, muestra 
 
 ## Stack
 
-Next.js 16.4.3 (App Router, `proxy.ts`) · React 19.3.1 · TypeScript 5.9.3 · Tailwind CSS 4.3.3 · `@supabase/supabase-js` 2.118.0 + `@supabase/ssr` 0.12.7 · PostgreSQL con migraciones SQL versionadas (sin ORM) · Netlify como destino. Node ≥ 22.18 (ejecuta las pruebas TypeScript con type stripping nativo).
+Next.js 16.4.3 (App Router, `proxy.ts`) · React 19.3.1 · TypeScript 5.9.3 · Tailwind CSS 4.3.3 · `@supabase/supabase-js` 2.118.0 + `@supabase/ssr` 0.12.7 · `@anthropic-ai/sdk` 1.3.0 (generador, solo servidor) · PostgreSQL con migraciones SQL versionadas (sin ORM) · Netlify como destino. Node ≥ 22.18 (ejecuta las pruebas TypeScript con type stripping nativo).
 
 ## Comandos
 
@@ -24,6 +24,10 @@ Next.js 16.4.3 (App Router, `proxy.ts`) · React 19.3.1 · TypeScript 5.9.3 · T
 
 Ejemplo de `test:db` con un servidor local: `PGHOST=/ruta/socket PGPORT=54329 PGUSER=postgres npm run test:db`. Filtrar un archivo: `npm run test:db -- 02`.
 
+## Generador editorial (V0.4)
+
+Piloto solo para IJLV (capacidad `editorial_generation`). Requiere las migraciones 0012–0013 y la variable de servidor `ANTHROPIC_API_KEY` en Netlify (Site configuration → Environment variables), nunca en el repo ni con prefijo `NEXT_PUBLIC_`. Opcionales: `GENERATION_MODEL` (por omisión `claude-sonnet-5-5`) y `GENERATION_TIMEOUT_MS` (55000). Sin la clave, la app muestra «Generación no configurada.» y todo lo demás funciona. Detalle y límites: [ADR-006](docs/DECISIONS/006_V0_4_EDITORIAL_GENERATOR.md).
+
 ## Configuración de Supabase (pasos concretos)
 
 Usa un proyecto **nuevo y exclusivo** de Content OS; no reutilices el de ST Hub.
@@ -31,7 +35,7 @@ Usa un proyecto **nuevo y exclusivo** de Content OS; no reutilices el de ST Hub.
 1. **Crear proyecto** en supabase.com (región cercana, p. ej. us-east). Guarda la contraseña de la base en tu gestor, no en el repo.
 2. **Auth → Sign In / Providers**: deja habilitado *Email*; desactiva **Allow new users to sign up**.
 3. **Auth → Users → Add user → Create new user**: tu correo y una contraseña fuerte, marcando *Auto Confirm User*.
-4. **SQL Editor**: ejecuta, en orden, el contenido de cada archivo de `supabase/migrations/` (`…0001_schema.sql` → `20261031000011_client_brain_seed.sql`). Alternativa: Supabase CLI con `supabase link` y `supabase db push`.
+4. **SQL Editor**: ejecuta, en orden, el contenido de cada archivo de `supabase/migrations/` (`…0001_schema.sql` → `20261031000013_ijlv_generator_seed.sql`). Alternativa: Supabase CLI con `supabase link` y `supabase db push`.
 5. **SQL Editor**: autoriza tu usuario (única fila activa permitida):
    ```sql
    insert into public.authorized_users (user_id)
@@ -80,7 +84,7 @@ tests/domain/        pruebas de dominio · tests/db/ pruebas PostgreSQL
 
 ## Restricciones vigentes
 
-Único stack autorizado: Next.js/TypeScript + Supabase/PostgreSQL + Tailwind + Netlify. Single-user con autenticación real, operaciones manuales y cálculos al consultar o modificar. Sin agentes, cron, Meta API, Metricool, OneDrive, n8n, automatización externa, ORM, backend separado, colas, IA, analítica ni colaboración.
+Único stack autorizado: Next.js/TypeScript + Supabase/PostgreSQL + Tailwind + Netlify, y desde V0.4 el SDK oficial de Anthropic para el generador editorial (ADR-006). Single-user con autenticación real y cálculos al consultar o modificar. Sin agentes, cron, Meta API, Metricool, OneDrive, n8n, automatización externa, ORM, backend separado, colas, investigación web, analítica ni colaboración.
 
 ## Referencias pendientes
 

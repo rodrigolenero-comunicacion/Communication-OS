@@ -1,6 +1,6 @@
 # Roadmap
 
-Versión activa: **V0.2 Calendar-First Editorial Studio** (activa en producción desde el 2026-10-31) con V0.2.1 cerrada. V0.3 Client Brain implementada en código, pendiente de aplicar 0010/0011.
+Versión activa: **V0.2 Calendar-First Editorial Studio** (activa en producción desde el 2026-10-31) con V0.2.1 cerrada. V0.3 Client Brain activa. V0.4 Generador Editorial implementado en código, pendiente de aplicar 0012/0013 y configurar la clave.
 Dirección vigente desde 2026-10-31: **Calendar-First Editorial Studio** (instrucción del propietario). Ver [AUDIT_V0_2.md](AUDIT_V0_2.md).
 
 ## Ahora: V0.2 — Calendar-First Editorial Studio (propuesta, pendiente de decisiones D1–D4)
@@ -17,11 +17,15 @@ Orgánico, cobertura/evento y material existente sin duplicar Communication Hub 
 
 Brain por cliente (estrategia, audiencias, voz, reglas, claims, aprendizajes, pilares/territorios) con fuentes trazables y estados activa/provisional/superseded/archivada (ADR-005). Código listo; 0010 y 0011 preparadas, pendientes de aplicación manual. La revisión pedagógica IJLV por nivel queda para una fase posterior.
 
+## V0.4 — Generador Editorial · piloto IJLV
+
+Generación conectada al Client Brain (ADR-006): concepto → paquete por formato y modo, biblioteca IJLV de 62 ideas, anti-repetición, evidencias y dependencia de Dirección Académica. Proveedor Anthropic (`claude-sonnet-5-5`). Código listo; 0012/0013 y la clave del proveedor pendientes de aplicar.
+
 ## Después (orden tentativo, cada fase con diseño y autorización propios)
 
-2. **V0.4 — Content Package por formato y modo:** Escaleta Vives, real + gráficos, motion (storyboard, timing, sonido), carruseles y Reels.
+2. ~~V0.4 — Content Package por formato y modo~~ (absorbido por el generador V0.4): Escaleta Vives, real + gráficos, motion (storyboard, timing, sonido), carruseles y Reels.
 3. **V0.5 — Bibliotecas:** Ideas (incluido el banco IJLV de +60), Patterns abstractos sin identidad de marca, References, Produced.
-4. **V0.6 — Generación asistida con IA:** sugerencias editables; IA ≠ aprobación; clave y costo a cargo del propietario.
+4. ~~V0.6 — Generación asistida con IA~~ (adelantada a V0.4 para IJLV; pendiente extender a otros clientes): sugerencias editables; IA ≠ aprobación; clave y costo a cargo del propietario.
 5. **V0.7 — Research:** Live Research bajo demanda con fuentes confiables; tendencias no son hechos.
 6. **Posterior:** analítica y aprendizajes, integraciones de lectura (ST Hub, Solotu_Cerebro, Meta/Metricool), write-back confirmado.
 

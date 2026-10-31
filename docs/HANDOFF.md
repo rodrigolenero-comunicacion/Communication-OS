@@ -11,12 +11,15 @@ Fecha: 2026-10-27. Estado: **parcialmente implementado — listo para conectar S
 | V0.2 Calendar-First | **Activa** y en uso |
 | Migración `20261031000009_content_origins.sql` | **Aplicada** por el propietario |
 | V0.2.1 Orígenes de contenido | **Cerrada y verificada** por el propietario con sesión real (2026-10-31): selector por cliente, orgánico intacto, evento pendiente/disponible, material existente con enlace, señales en tarjetas (pendiente, disponible, copy), edición de «Origen y material», mover de día, Content Bank y filtros, IJLV/Solotu solo orgánico, móvil básico. Correcciones durante el smoke: `6d406d4` (modo de producción) y `c5c4f4d` (texto del Content Bank vacío, opción B) |
+| Migraciones `…0010_client_brain.sql` y `…0011_client_brain_seed.sql` | **Aplicadas** (V0.3 activa) |
+| V0.3 Client Brain + Sources | **Activa y verificada** por el propietario con sesión real (2026-10-31) |
+| Migración `20261031000012_editorial_generator.sql` (V0.4, esquema y comandos) | **Preparada, no aplicada** |
+| Migración `20261031000013_ijlv_generator_seed.sql` (V0.4, carga IJLV) | **Preparada, no aplicada** (después de la 0012) |
+| `ANTHROPIC_API_KEY` en Netlify | **Pendiente** (sin ella: «Generación no configurada.») |
+| V0.4 Generador Editorial · piloto IJLV | Implementado y probado localmente; sin llamada real al proveedor ni recorrido con sesión real |
 
 **Corrección V0.2.1 (smoke real, 2026-10-31):** «Elige una opción: production_mode_key» al guardar Cobertura/evento. Causa raíz: el registro de comandos de la app (`src/application/commands.ts`) exigía el modo para todos los orígenes; la función SQL de la 0009 ya lo condicionaba al origen. Corregido solo en la app; **sin migración nueva** (0009 sin cambios). Pruebas: `tests/domain/commands.test.ts` (reproduce el fallo) y `tests/db/12_command_roundtrip.mjs` (formulario → SQL real).
 
-| Migración `20261031000010_client_brain.sql` (V0.3, esquema y comandos) | **Preparada, no aplicada** |
-| Migración `20261031000011_client_brain_seed.sql` (V0.3, carga inicial) | **Preparada, no aplicada** (aplicar después de la 0010) |
-| V0.3 Client Brain + Sources | Implementada en código y probada localmente; sin recorrido con sesión real |
 
 Las secciones siguientes son el registro histórico de cada sesión; donde digan «0008 no aplicada» o «reset pendiente», prevalece esta tabla.
 
@@ -176,12 +179,27 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 2. `supabase/migrations/20261031000011_client_brain_seed.sql`.
 3. Comprobación: `select b.slug, count(e.*) from public.brands b left join public.brain_entries e on e.brand_id = b.id group by 1;` → esperado ijlv 31, tec 14, solotu 6 (medido aplicando 0010+0011 sobre una base local) (si un cliente sale en 0, su `slug` no coincide y la carga lo omitió).
 
+## Sesión 4 · 2026-10-31 · V0.4 Generador Editorial (piloto IJLV)
+
+- **Decisiones del propietario:** proveedor Anthropic, modelo equilibrado (`claude-sonnet-5-5`); el archivo «Sistema Editorial Creativo IJLV» subido hoy es el sistema vigente (v1.4) aunque su encabezado dice v1.2 (idéntico al del repo).
+- **Reutilización y decisiones:** ver ADR-006 (paquete en `review_packets.package`, claims, `approval_dependencies`, historial en `operation_events`; nuevas `idea_library` y `generation_runs`; `brands.capabilities`).
+- **Implementado:** biblioteca IJLV (62 ideas, IDs 01–62, extraídas por script); Context Builder; esquemas validados; adaptador Anthropic con degradación sin clave; Stage A (clasificar, desarrollar ≤3, 5 desde cero) con avisos de similitud; aceptación → una pieza borrador en el día; Stage B en la ficha (paquete por formato/modo, revelado progresivo, «Ver producción»); Evidence Engine (Fuente necesaria, Dirección Académica → dependencia); regenerar paquete/concepto con indicación breve e historial; «Investiga un tema» como próximamente; Tec y Solotu sin cambios.
+- **Corrección incluida:** el reset operativo contempla `generation_runs` (append-only ligado a piezas) y conserva la biblioteca.
+- **Pruebas (PASS):** dominio 68/68 (`npm test`: context builder, esquemas válidos/ inválidos, límites de la API, anti-repetición, 5 ideas/≤3 direcciones, evidencias, motor con proveedor simulado: sin configuración, salida inválida sin resultado, timeout y reintento, adaptador sin clave); PostgreSQL 384 aserciones en 15 archivos (nuevo `14_generator.sql` 37; `10_provisional_config.mjs` 29 con la carga real de 0013; contrato 49; reset 12); typecheck y build OK; rutas nuevas redirigen a `/login` sin sesión; el SDK no aparece en el bundle del cliente.
+- **No verificado:** llamada real al proveedor (sin clave), recorrido con sesión real, límite de tiempo de Netlify (documentación no accesible desde el entorno).
+
+**Orden de aplicación para el propietario**
+1. SQL Editor de Supabase: `supabase/migrations/20261031000012_editorial_generator.sql`.
+2. SQL Editor: `supabase/migrations/20261031000013_ijlv_generator_seed.sql`.
+3. Comprobación: `select b.slug, b.capabilities, (select count(*) from public.idea_library l where l.brand_id = b.id) as ideas from public.brands b order by 1;` → esperado ijlv `{editorial_generation}` 62; tec y solotu `{}` 0.
+4. Netlify → Site configuration → Environment variables: `ANTHROPIC_API_KEY` (de console.anthropic.com → API keys; ámbito: funciones/servidor). Opcionales: `GENERATION_MODEL`, `GENERATION_TIMEOUT_MS`. Volver a desplegar para que la tome.
+
 ## Siguiente unidad (vigente)
 
-1. Rodrigo: aplicar 0010 y 0011 y recorrer Clientes → IJLV → Brain / Fuentes, Tec y Solotu (criterios 1–16 de la instrucción V0.3) + regresión de calendario, Day Studio, orígenes, Content Bank y ficha.
-2. Subir al repo el Sistema Editorial IJLV v1.4 y `Solotu_Contexto_v2.md` para cotejar la carga.
-3. Validar los ejes Tec provisionales contra fuente institucional.
-- Pendiente conocido sin tocar: objetivo de prueba 5/semana de Solotu.IA.
+1. Rodrigo: aplicar 0012 y 0013, configurar la clave y recorrer los criterios 1–27 de la instrucción V0.4 + regresión (calendario, Day Studio, orígenes Tec, Content Bank, Brain, Fuentes, ficha, Review, Publication Queue, Operación).
+2. Observar en la primera generación real el tiempo de respuesta en Netlify y la calidad; si Netlify corta, ajustar `GENERATION_TIMEOUT_MS` o revisar el plan de funciones.
+3. Pendientes de fuente: `Solotu_Contexto_v2.md`; validar ejes Tec provisionales; fechas de consulta de las fuentes UNICEF.
+- Sin tocar: objetivo de prueba 5/semana de Solotu.IA.
 
 ## Siguiente unidad (histórico de sesión 1)
 

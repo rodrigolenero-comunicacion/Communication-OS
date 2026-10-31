@@ -129,6 +129,17 @@ Historial append-only mínimo para cambios de estado no editoriales, reasignaci�
 - `app.source_in_brand(fuente, cliente)`: una fuente vale para un cliente si es de su marca, de una de sus cuentas o pública general.
 - Comandos: `upsert_brand_source` (ámbito marca; no se traslada entre clientes) y `upsert_brain_entry` (cliente y categoría inmutables). RLS: solo lectura para usuario autorizado.
 
+## Adiciones V0.4 (migraciones 0012 esquema y 0013 carga IJLV, ver ADR-006)
+
+- `brands.capabilities text[]` (catálogo: `editorial_generation`). Solo IJLV la tiene.
+- `brain_entries.applies_to text[]`: formatos o modos a los que aplica la entrada (vacío = siempre). `brand_axes.description`.
+- `idea_library`: `brand_id`, `code` (único por cliente; IDs del documento), `title`, `summary`, `pillar_id`, `territory_id` (del mismo cliente), `suggested_format` (texto de la fuente), `format_key` y `suggested_production_mode` (solo si el mapeo es inequívoco), `production_level`, `stage`, `requirement_kind` (R/V/I…), `requirements`, `cta`, `source_reference_id`, `source_locator`, `active`. Solo lectura por la API.
+- `content_pieces.library_idea_id`: idea de origen; el uso previo se deriva de aquí.
+- `review_packets.package jsonb`: concepto y Content Package estructurado (≤ 200 KB).
+- `claims.evidence_class` (observation | institutional | educational_general | specialized | creative_metaphor) y `claims.generated`.
+- `generation_runs` (append-only): `brand_id`, `content_piece_id`, `stage` (classify | develop | ideas | concept | package), `provider`, `model`, `input_hash` (SHA-256), `status` (succeeded | failed | invalid_output | not_configured | refused), `error_code`, `input_tokens`, `output_tokens`, `actor_id`. Sin prompts ni contexto.
+- Comandos: `create_generated_piece`, `save_generated_concept`, `save_generated_package` (paquete + claims + dependencias en una transacción; nunca aprueba), `record_generation_run`. Todos exigen la capacidad del cliente en la base.
+
 ## Entidades calculadas o diferidas
 
 Portfolio y PlanningWindow son vistas/objetos de dominio. Coverage, Runway, BufferHealth, ReservePool y EditorialNeed se calculan, no tienen tabla materializada. MetricSnapshot, AgentProposal, jobs, integrations y métricas quedan fuera. No guardar un measurement_status sin funcionalidad real; la medición es un eje conceptual futuro separado de producción/publicación.

@@ -29,7 +29,9 @@ Escala cambios de ownership, unidad de conteo, alcance, arquitectura, nuevos ser
 
 Next.js + TypeScript; Supabase para PostgreSQL y autenticación; Tailwind; Netlify como destino de hosting. Se permiten los paquetes oficiales imprescindibles de estas tecnologías y sus dependencias, y las herramientas de desarrollo inherentes al proyecto. No elijas versiones por memoria: verifica compatibilidad al implementar y fija lo instalado en el lockfile. Usa SQL versionado, sin ORM. Usa capacidades nativas para validación, fechas y pruebas de dominio cuando basten; no incorpores librerías adicionales por conveniencia.
 
-No implementar agentes, cron, tareas en segundo plano, Meta API, Metricool, OneDrive, n8n, webhooks, conectores, sincronización, write-back, automatización externa, IA generativa, RBAC ni analítica. No dejar SDKs, stubs de conectores o tablas especulativas para esos servicios.
+No implementar agentes, cron, tareas en segundo plano, Meta API, Metricool, OneDrive, n8n, webhooks, conectores, sincronización, write-back, automatización externa, RBAC ni analítica. No dejar SDKs, stubs de conectores o tablas especulativas para esos servicios.
+
+Excepción autorizada por el propietario (V0.4, ADR-006): generación editorial con un proveedor LLM (Anthropic, SDK oficial `@anthropic-ai/sdk`) detrás del puerto `StructuredGenerator`, solo para clientes con la capacidad `editorial_generation` (piloto IJLV). Una llamada por etapa con salida estructurada validada; el contexto sale del Client Brain; nada se aprueba automáticamente; la clave vive solo en el entorno del servidor. Sin agentes, investigación web, imágenes, audio ni generación multi-cliente.
 
 ## Reglas de implementación
 

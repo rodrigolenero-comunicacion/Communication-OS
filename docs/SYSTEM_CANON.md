@@ -8,12 +8,13 @@ Estado: contrato de V0.1 (2026-10-27), con cambio de dirección a Calendar-First
 |---|---|
 | Versión activa | **V0.2 Calendar-First Editorial Studio**: activa en producción y en uso por el propietario (reset operativo ejecutado y 0008 aplicada, confirmados por el propietario el 2026-10-31) |
 | Entregas cerradas | **V0.2.1 Orígenes de contenido (Tec)**: 0009 aplicada; cerrada y verificada con sesión real por el propietario (2026-10-31) |
-| Última entrega | **V0.3 Client Brain + Sources** (ADR-005): código listo; migraciones 0010 y 0011 **preparadas, no aplicadas** |
+| Entregas | **V0.3 Client Brain + Sources** (ADR-005): activa y verificada con sesión real por el propietario |
+| Última entrega | **V0.4 Generador Editorial · piloto IJLV** (ADR-006): código listo; migraciones 0012 y 0013 **preparadas, no aplicadas**; falta configurar `ANTHROPIC_API_KEY` |
 | Decisión | Evolucionar el sistema actual, sin reconstrucción ([AUDIT_V0_2.md](AUDIT_V0_2.md), ADR-003, ADR-004) |
-| Pendiente | documento IJLV v1.4 (vigente, no recibido: el Brain IJLV se cargó del texto de la instrucción V0.3, sin cotejo); `Solotu_Contexto_v2.md` no recibido; validar ejes Tec provisionales contra fuente institucional |
+| Pendiente | `Solotu_Contexto_v2.md` no recibido; validar ejes Tec provisionales contra fuente institucional. Sistema Editorial IJLV: el propietario confirmó como vigente (v1.4) el archivo subido el 2026-10-31, cuyo encabezado dice v1.2 |
 | Hipótesis | Las plantillas por categoría convivirán con formato × modo de producción hasta validar en uso |
 
-Los invariantes de abajo siguen vigentes. Las exclusiones de V0.1 (IA, investigación, integraciones) se mantienen en V0.2; la IA está aprobada como fase posterior con regla «IA ≠ aprobación».
+Los invariantes de abajo siguen vigentes. Desde V0.4 la IA generativa está autorizada solo como generador editorial (ADR-006), con la regla «IA ≠ aprobación»; investigación web e integraciones siguen excluidas.
 
 ## Propósito
 
@@ -55,7 +56,7 @@ Una referencia contextual de IJLV o Solotu no convierte por sí sola una pieza l
 - INV-14: idea y planned no cuentan en PROJECTED.
 - INV-15: una reserva no es una asignación ni una programación.
 - INV-16: Need, Idea y ContentPiece son conceptos distintos.
-- INV-17: ninguna propuesta de IA genera piezas automáticamente; IA no está en V0.1.
+- INV-17: ninguna propuesta de IA genera piezas automáticamente: una pieza nace solo cuando el usuario acepta un concepto, y todo lo generado queda en borrador. La IA no modifica el Brain.
 - INV-18: Review Packet y Production Spec son representaciones distintas del mismo trabajo.
 - INV-19: aprobar requiere una decisión explícita y registrada.
 - INV-20: no modificar estado autoritativo externo sin confirmación del origen; V0.1 no tiene write-back.
@@ -65,7 +66,7 @@ Una referencia contextual de IJLV o Solotu no convierte por sí sola una pieza l
 
 V0.1 Manual Control Tower incluye login, portfolio, objetivos semanales, ventanas, piezas, planeación, producción, Review Packet básico, decisiones, publicaciones manuales, reserva explícita, cobertura, runway y colas. Los gaps se muestran como necesidades calculadas; no requieren un workflow persistente de demandas en esta versión.
 
-Stack cerrado: Next.js/TypeScript + Supabase/PostgreSQL + Tailwind + Netlify. Sin tecnologías adicionales. Sin agentes, cron, Meta API, Metricool, OneDrive, n8n ni automatización externa. Sin integraciones ST Hub/IJLV/Solotu, IA, métricas reales, notificaciones o multiusuario.
+Stack cerrado: Next.js/TypeScript + Supabase/PostgreSQL + Tailwind + Netlify, más el SDK oficial de Anthropic para el generador editorial (V0.4). Sin agentes, cron, Meta API, Metricool, OneDrive, n8n ni automatización externa. Sin integraciones ST Hub/IJLV/Solotu, investigación web, métricas reales, notificaciones o multiusuario.
 
 ## Criterio de éxito
 

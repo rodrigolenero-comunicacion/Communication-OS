@@ -1,4 +1,4 @@
-# Arquitectura — V0.1
+# Arquitectura — V0.1 (+ generador V0.4)
 
 ## Forma del sistema
 
@@ -40,6 +40,20 @@ Separar permisos de edición de campos ordinarios y campos protegidos. El rol au
 Aprobar: validar autoridad, estado, revision, hold, packet, claims y dependencias → insertar snapshot/decisión → actualizar approved/revision aprobada → commit. Error en cualquier paso revierte todo. Programar/publicar comprueba la aprobación vigente en esa misma transacción. Los espejos usan un comando separado de observación, nunca approve.
 
 Datos derivados (coverage, runway, health, necesidades, impacto) no se guardan como verdad paralela. Se calculan al leer y tras acciones manuales. No usar cron, polling de plataformas ni trabajos en segundo plano. La UI debe refrescar cuando el usuario vuelve o solicita actualizar para no conservar fechas vencidas de una sesión anterior.
+
+## Generador editorial (V0.4, ADR-006)
+
+Única salida a un servicio externo de la app: el proveedor LLM, llamado desde acciones de servidor (`src/app/generation-actions.ts`) con la clave del entorno. Capas:
+
+```text
+src/domain/generation/   context (Context Builder puro), schema (JSON Schema + validador), prompt (instrucciones genéricas),
+                         similarity (anti-repetición), evidence (clases de afirmación + reglas del Brain), engine (orquestación
+                         determinística con proveedor inyectado), provider (puerto StructuredGenerator), package (textos/secciones)
+src/infrastructure/llm/  anthropic.ts (adaptador; SDK oficial, salida estructurada, un reintento, timeout configurable)
+src/application/         generation.ts (snapshot → contexto, reglas de revisión, registro técnico)
+```
+
+Flujo: acción → snapshot del usuario (RLS) → `buildContext` del cliente → proveedor → validación de esquema y semántica → **solo si es válido**, comando SQL transaccional (`create_generated_piece` / `save_generated_package` / `save_generated_concept`), que vuelve a comprobar capacidad, versión, ámbito de fuentes y estado editable. Cada llamada deja un `generation_runs` sin contenido. Ningún paso aprueba ni modifica el Brain.
 
 ## Referencias y archivos
 
