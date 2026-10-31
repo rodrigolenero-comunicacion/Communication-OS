@@ -42,7 +42,7 @@ export async function generateProposals(
   const built = buildContext({ ...input, stage: mode });
   const prompt = proposalPrompt(mode, built.context);
   const hash = await inputHash(SYSTEM_PROMPT + prompt);
-  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: proposalsSchema(built.options), maxTokens: MAX_TOKENS[mode], effort: GENERATION_EFFORT });
+  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: proposalsSchema(built.options), maxTokens: MAX_TOKENS[mode], effort: GENERATION_EFFORT, stage: mode });
   const base = { stage: mode, provider: generator.provider, inputHash: hash } as const;
   if (!res.ok) {
     await record({ ...base, model: res.model, status: failureStatus(res.code), errorCode: res.code, inputTokens: res.inputTokens ?? null, outputTokens: res.outputTokens ?? null });
@@ -78,7 +78,7 @@ export async function generatePackage(
   const built = buildContext({ ...input, stage: "package" });
   const prompt = packagePrompt(built.context);
   const hash = await inputHash(SYSTEM_PROMPT + prompt);
-  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: packageSchema(built.options), maxTokens: MAX_TOKENS.package, effort: GENERATION_EFFORT });
+  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: packageSchema(built.options), maxTokens: MAX_TOKENS.package, effort: GENERATION_EFFORT, stage: "package" });
   const base = { stage: "package", provider: generator.provider, inputHash: hash } as const;
   if (!res.ok) {
     await record({ ...base, model: res.model, status: failureStatus(res.code), errorCode: res.code, inputTokens: res.inputTokens ?? null, outputTokens: res.outputTokens ?? null });

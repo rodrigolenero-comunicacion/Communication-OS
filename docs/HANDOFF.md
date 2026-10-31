@@ -196,6 +196,8 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 
 **Revisión del adaptador (2026-10-31, antes de activar):** el límite de 16 campos con unión de tipos está documentado literalmente en la página oficial de Structured Outputs («Schema complexity limits» → «Explicit limits»); se conserva el modelado con cadena vacía y se acota la conversión a null a los opcionales declarados. Esfuerzo `medium` explícito en ambas etapas, thinking adaptativo explícito, `maxRetries: 0` (antes 1: con timeout de 55 s un reintento podía rebasar los 60 s de Netlify). Pruebas: dominio 70/70, PostgreSQL 384, typecheck y build OK. Sin llamadas reales.
 
+**Diagnóstico del primer intento real (2026-10-31):** dos `generation_runs` en `develop` con `provider_error`, sin tokens y ~1 s (no es timeout). El adaptador ocultaba la causa. Ahora clasifica `bad_request`, `authentication`, `permission`, `not_found`, `rate_limited`, `timeout`, `provider_error` (se guarda en `generation_runs.error_code`, texto libre ≤ 80, sin migración) y emite en el Function log de Netlify una sola línea `[editorial-generation] {stage, provider, code, status, name, type, requestId, message, durationMs}`, con el mensaje del proveedor sanitizado (sin clave, headers, prompt, system ni contexto). La petición al proveedor no cambió. Pendiente: repetir una vez «Ayúdame a desarrollar una idea» y leer esa línea.
+
 ## Siguiente unidad (vigente)
 
 1. Rodrigo: aplicar 0012 y 0013, configurar la clave y recorrer los criterios 1–27 de la instrucción V0.4 + regresión (calendario, Day Studio, orígenes Tec, Content Bank, Brain, Fuentes, ficha, Review, Publication Queue, Operación).
