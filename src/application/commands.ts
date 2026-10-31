@@ -72,6 +72,10 @@ export const CLIENT_COLORS = ["blue", "yellow", "purple", "green", "red", "teal"
 const ORIGINS = ["own_idea", "develop", "generate", "research", "library"] as const;
 const CATALOG_KEY = /^[a-z0-9_]+$/;
 const CONTENT_ORIGIN_KEYS = ["organic", "event_coverage", "existing_material"] as const;
+function isNonOrganic(fd: FormData): boolean {
+  const origin = raw(fd, "content_origin");
+  return origin === "event_coverage" || origin === "existing_material";
+}
 const MATERIAL_STATUSES = ["not_required", "pending", "available"] as const;
 const SOURCE_REF_SYSTEMS = ["st_hub", "onedrive", "other"] as const;
 function catalogKey(fd: FormData, name: string, optional = false): string | null {
@@ -153,7 +157,10 @@ export const COMMANDS: Record<string, CommandSpec> = {
     rpc: "create_calendar_piece", success: "Contenido guardado en el calendario",
     params: (fd) => ({ p_account_id: uuid(fd, "account_id"), p_planned_date: date(fd, "planned_date"),
       p_title: text(fd, "title"), p_idea: text(fd, "idea"), p_origin: oneOf(fd, "origin", ORIGINS, true) ?? "own_idea",
-      p_format_key: catalogKey(fd, "format_key"), p_production_mode_key: catalogKey(fd, "production_mode_key"),
+      p_format_key: catalogKey(fd, "format_key"),
+      // Modo de producción: obligatorio solo en el flujo orgánico (incluida la forma V0.2 sin origen).
+      // Evento y material existente lo guardan NULL; la base aplica la misma regla.
+      p_production_mode_key: catalogKey(fd, "production_mode_key", isNonOrganic(fd)),
       p_pillar_id: uuid(fd, "pillar_id", true), p_territory_id: uuid(fd, "territory_id", true),
       p_bucket: oneOf(fd, "bucket", BUCKETS, true) ?? "feed",
       // V0.2.1: solo si el formulario los trae (migración 0009 aplicada); la firma de V0.2 sigue válida.

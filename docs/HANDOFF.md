@@ -12,6 +12,8 @@ Fecha: 2026-10-27. Estado: **parcialmente implementado — listo para conectar S
 | Migración `20261031000009_content_origins.sql` | **Preparada**, pendiente de aplicación manual |
 | V0.2.1 Orígenes de contenido | **Implementada**, **no verificada aún con sesión real** |
 
+**Corrección V0.2.1 (smoke real, 2026-10-31):** «Elige una opción: production_mode_key» al guardar Cobertura/evento. Causa raíz: el registro de comandos de la app (`src/application/commands.ts`) exigía el modo para todos los orígenes; la función SQL de la 0009 ya lo condicionaba al origen. Corregido solo en la app; **sin migración nueva** (0009 sin cambios). Pruebas: `tests/domain/commands.test.ts` (reproduce el fallo) y `tests/db/12_command_roundtrip.mjs` (formulario → SQL real).
+
 Las secciones siguientes son el registro histórico de cada sesión; donde digan «0008 no aplicada» o «reset pendiente», prevalece esta tabla.
 
 ## Sesión 1 · 2026-10-27

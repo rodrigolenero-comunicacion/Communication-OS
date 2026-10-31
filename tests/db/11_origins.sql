@@ -60,3 +60,8 @@ select test.ok((select content_origin = 'existing_material' and material_status 
 -- Escritura directa bloqueada
 select test.throws(format($$update public.content_pieces set material_status = 'available' where id = %L$$, :'evp'), '42501', 'Material no se cambia por la API de datos');
 select test.throws(format($$update public.brands set content_origins = array['organic'] where id = %L$$, :'tec'), '42501', 'Orígenes de cliente no se cambian por la API de datos');
+
+-- Corrección V0.2.1: modo de producción NULL en evento/material, preservado por edición y movimiento.
+select test.ok((select production_mode_key is null from public.content_pieces where id = :'eva'), 'Evento disponible guarda modo de producción NULL');
+select test.ok((select production_mode_key is null from public.content_pieces where id = :'mat'), 'Material existente conserva modo NULL tras moverse');
+select test.ok((select production_mode_key = 'real_people' from public.content_pieces where id = :'org'), 'Orgánica conserva su modo de producción');
