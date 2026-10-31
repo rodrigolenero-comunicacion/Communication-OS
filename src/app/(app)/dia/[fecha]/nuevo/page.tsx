@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadContext, newRequestId } from "@/application/context";
+import { canGenerate } from "@/application/generation";
 import { CommandForm } from "@/components/CommandForm";
 import { CreateContentSteps } from "@/components/calendar/CreateContentSteps";
 import { Empty } from "@/components/ui";
@@ -15,10 +16,10 @@ export default async function NewContentPage({
   searchParams,
 }: {
   params: Promise<{ fecha: string }>;
-  searchParams: Promise<{ cuenta?: string }>;
+  searchParams: Promise<{ cuenta?: string; manual?: string }>;
 }) {
   const { fecha } = await params;
-  const { cuenta } = await searchParams;
+  const { cuenta, manual } = await searchParams;
   if (!isLocalDate(fecha)) notFound();
   const { snapshot } = await loadContext();
   const account = snapshot.accounts.find((a) => a.id === cuenta && a.active);
@@ -28,6 +29,8 @@ export default async function NewContentPage({
   // V0.2.1: orígenes por configuración del cliente; sin migración 0009, solo orgánico.
   const v021Ready = brand.content_origins !== undefined;
   const origins = enabledOrigins(brand.content_origins);
+  // V0.4: generador editorial solo para clientes con la capacidad (piloto IJLV).
+  const generatorHref = canGenerate(snapshot, brand) && !manual ? `/dia/${fecha}/generar?cuenta=${account.id}` : undefined;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -45,6 +48,8 @@ export default async function NewContentPage({
               <CommandForm command="create_calendar_piece" requestId={newRequestId()} submitLabel="Guardar" showSubmit={false}
                 hidden={{ account_id: account.id, planned_date: fecha, content_origin: v021Ready ? "organic" : null }}>
                 <CreateContentSteps
+                  generatorHref={generatorHref}
+                  manualHref={`/dia/${fecha}/nuevo?cuenta=${account.id}&manual=1`}
                   formats={snapshot.formats}
                   modes={snapshot.modes}
                   pillars={axes.filter((x) => x.kind === "pillar")}

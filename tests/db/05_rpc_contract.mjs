@@ -30,6 +30,7 @@ const overrides = {
   verify_claim: { status: "supported" },
   set_dependency_status: { status: "satisfied" },
   upsert_brand_source: { source_id: UUID, source_type: "decision", status: "provisional", accessed_at: "2030-01-08" },
+  create_generated_piece: { origin: "library", library_idea_id: UUID, concept_json: '{"idea":"x"}', stage: "primaria", central_message: "m" },
   upsert_brain_entry: { entry_id: UUID, category: "claim", status: "active", claim_status: "confirmed", key: "k" },
 };
 

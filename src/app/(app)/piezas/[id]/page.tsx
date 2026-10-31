@@ -4,6 +4,9 @@ import { loadContext, newRequestId } from "@/application/context";
 import { CommandForm } from "@/components/CommandForm";
 import { CATEGORY_LABEL } from "@/components/NewPieceFields";
 import { PacketView } from "@/components/PacketView";
+import { canGenerate, generator } from "@/application/generation";
+import { PackageActions } from "@/components/generator/PackageActions";
+import { PackageView } from "@/components/generator/PackageView";
 import { PublicationPanel } from "@/components/PublicationPanel";
 import { MoveDateControl } from "@/components/calendar/MoveDateControl";
 import { ORIGIN_LABEL, calendarDateOf, canMoveByDrag } from "@/domain/calendar";
@@ -80,6 +83,10 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
   const modeLabel = snapshot.modes.find((m) => m.key === piece.production_mode_key)?.label ?? null;
   const template = piece.template_id ? snapshot.templates.find((t) => t.id === piece.template_id) ?? null : null;
   const scheduled = pubs.filter((p) => p.status === "scheduled");
+  // V0.4: Content Package generado (piloto: solo clientes con generación editorial).
+  const generation = isLocal && canGenerate(snapshot, brand);
+  const storedPackage = (packet as { package?: Record<string, unknown> | null } | null)?.package ?? null;
+  const sourceTitle = (sid: string | null) => (sid ? snapshot.references.find((r) => r.id === sid)?.title ?? null : null);
 
   return (
     <>
@@ -136,6 +143,15 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
                   </Details>
                 </div>
               )}
+            </Section>
+          )}
+
+          {generation && (
+            <Section id="paquete" title="Content Package" description="Borrador generado con el Brain del cliente. Nada se aprueba solo: revisa, ajusta y envía a revisión como cualquier pieza.">
+              {storedPackage ? <PackageView pkg={storedPackage} sourceTitle={sourceTitle} /> : <p className="mb-3 text-sm text-muted">Esta pieza aún no tiene paquete generado.</p>}
+              <div className="mt-4">
+                <PackageActions pieceId={id} hasPackage={!!storedPackage && "caption" in storedPackage} editable={editable} configured={generator().configured} />
+              </div>
             </Section>
           )}
 

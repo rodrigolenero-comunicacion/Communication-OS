@@ -229,6 +229,24 @@ export const COMMANDS: Record<string, CommandSpec> = {
         p_sort: sort === null ? 0 : int(fd, "sort") };
     },
   },
+  create_generated_piece: {
+    rpc: "create_generated_piece", success: "Pieza creada",
+    params: (fd) => {
+      const origin = oneOf(fd, "origin", ["own_idea", "develop", "generate", "library"] as const)!;
+      const concept = text(fd, "concept_json");
+      let parsed: unknown = {};
+      try { parsed = concept ? JSON.parse(concept) : {}; } catch { throw new InputError("Concepto inválido"); }
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new InputError("Concepto inválido");
+      // Lo que el usuario editó en el formulario prevalece sobre la propuesta.
+      const edited = { ...(parsed as Record<string, unknown>), title: text(fd, "title"), idea: text(fd, "idea"),
+        central_message: text(fd, "central_message"), stage: text(fd, "stage") };
+      return { p_account_id: uuid(fd, "account_id"), p_planned_date: date(fd, "planned_date"), p_origin: origin,
+        p_title: text(fd, "title"), p_idea: text(fd, "idea"), p_format_key: catalogKey(fd, "format_key"),
+        p_production_mode_key: catalogKey(fd, "production_mode_key"),
+        p_pillar_id: uuid(fd, "pillar_id", true), p_territory_id: uuid(fd, "territory_id", true),
+        p_library_idea_id: origin === "library" ? uuid(fd, "library_idea_id") : null, p_concept: edited };
+    },
+  },
   upsert_template: {
     rpc: "upsert_template", success: "Plantilla guardada",
     params: (fd) => {

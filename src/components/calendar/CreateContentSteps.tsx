@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { AxisRow, CatalogRow } from "@/infrastructure/data";
 import { Submit } from "../CommandForm";
 
 const START_OPTIONS = [
-  { key: "own_idea", label: "Ya tengo una idea", available: true },
-  { key: "develop", label: "Ayúdame a desarrollar una idea", available: false },
-  { key: "generate", label: "Genera ideas desde cero", available: false },
-  { key: "research", label: "Investiga un tema y propón ideas", available: false },
-  { key: "library", label: "Usar biblioteca", available: false },
+  { key: "own_idea", label: "Ya tengo una idea", generator: false },
+  { key: "develop", label: "Ayúdame a desarrollar una idea", generator: true },
+  { key: "generate", label: "Genera ideas desde cero", generator: true },
+  // Sin integración real de investigación web: no se simula (V0.4).
+  { key: "research", label: "Investiga un tema y propón ideas", generator: null },
+  { key: "library", label: "Usar biblioteca", generator: true },
 ] as const;
 
 const STEPS = ["¿Cómo quieres empezar?", "Tu idea", "¿Qué quieres crear?", "¿Cómo se producirá?", "Últimos detalles"];
@@ -23,12 +25,19 @@ export function CreateContentSteps({
   modes,
   pillars,
   territories,
+  generatorHref,
+  manualHref,
 }: {
+  /** Si el cliente tiene generación editorial: ruta del generador (sin el parámetro de modo). */
+  generatorHref?: string;
+  /** Con generador: enlace para crear a mano sin generador. */
+  manualHref?: string;
   formats: CatalogRow[];
   modes: CatalogRow[];
   pillars: AxisRow[];
   territories: AxisRow[];
 }) {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [origin, setOrigin] = useState("own_idea");
   const [title, setTitle] = useState("");
@@ -36,7 +45,8 @@ export function CreateContentSteps({
   const [format, setFormat] = useState("");
   const [mode, setMode] = useState("");
 
-  const canAdvance = [origin === "own_idea", title.trim().length > 0, format !== "", mode !== "", true][step];
+  const available = (o: (typeof START_OPTIONS)[number]) => o.generator === false || (o.generator === true && !!generatorHref);
+  const canAdvance = [START_OPTIONS.some((o) => o.key === origin && available(o)), title.trim().length > 0, format !== "", mode !== "", true][step];
   const formatLabel = formats.find((f) => f.key === format)?.label;
   const modeLabel = modes.find((m) => m.key === mode)?.label;
 
@@ -54,12 +64,15 @@ export function CreateContentSteps({
       <fieldset hidden={step !== 0} className="space-y-2">
         <legend className="mb-2 text-lg font-semibold">¿Cómo quieres empezar?</legend>
         {START_OPTIONS.map((o) => (
-          <label key={o.key} className={`flex items-center gap-2 rounded-md border border-line p-3 ${o.available ? "cursor-pointer bg-paper" : "opacity-60"}`}>
-            <input type="radio" name="origin" value={o.key} checked={origin === o.key} disabled={!o.available} onChange={() => setOrigin(o.key)} />
+          <label key={o.key} className={`flex items-center gap-2 rounded-md border border-line p-3 ${available(o) ? "cursor-pointer bg-paper" : "opacity-60"}`}>
+            <input type="radio" name="origin" value={o.key} checked={origin === o.key} disabled={!available(o)} onChange={() => setOrigin(o.key)} />
             <span>{o.label}</span>
-            {!o.available && <span className="ml-auto text-xs text-muted">Próximamente</span>}
+            {!available(o) && <span className="ml-auto text-xs text-muted">{o.generator === null ? "Próximamente: sin investigación web todavía" : "Próximamente"}</span>}
           </label>
         ))}
+        {generatorHref && manualHref && (
+          <p className="text-xs text-muted">Con generador editorial. <a href={manualHref} className="underline">Prefiero llenarlo yo, sin generador</a>.</p>
+        )}
       </fieldset>
 
       <fieldset hidden={step !== 1} className="space-y-3">
@@ -132,7 +145,8 @@ export function CreateContentSteps({
           <button type="button" onClick={() => setStep(step - 1)} className="btn border border-line bg-paper">Atrás</button>
         )}
         {step < STEPS.length - 1 ? (
-          <button type="button" disabled={!canAdvance} onClick={() => setStep(step + 1)} className="btn bg-ink text-paper">Siguiente</button>
+          <button type="button" disabled={!canAdvance} className="btn bg-ink text-paper"
+            onClick={() => (step === 0 && generatorHref ? router.push(`${generatorHref}&modo=${origin}`) : setStep(step + 1))}>Siguiente</button>
         ) : (
           <Submit label="Guardar en el calendario" />
         )}

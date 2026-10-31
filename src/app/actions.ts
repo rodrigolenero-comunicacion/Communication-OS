@@ -49,6 +49,9 @@ export async function runCommand(_prev: CommandResult | null, fd: FormData): Pro
   if ((name === "create_piece" || name === "quick_create_piece" || name === "create_external_mirror") && pieceId && UUID.test(pieceId)) {
     redirect(`/piezas/${pieceId}`);
   }
+  if (name === "create_generated_piece" && pieceId && UUID.test(pieceId)) {
+    redirect(`/piezas/${pieceId}#paquete`);
+  }
   if (name === "create_calendar_piece" && pieceId && UUID.test(pieceId)) {
     redirect(`/dia/${String(fd.get("planned_date"))}?nueva=${pieceId}`);
   }

@@ -21,12 +21,15 @@ export interface BrandRow {
   color?: ClientColor; short_label?: string | null;
   /** V0.2.1: orígenes habilitados; ausente si la migración 0009 no está aplicada. */
   content_origins?: string[];
+  /** V0.4: capacidades (p. ej. editorial_generation); ausente sin la migración 0012. */
+  capabilities?: string[];
 }
 export interface CatalogRow { key: string; label: string; sort: number; active: boolean }
 export interface AxisRow {
   id: string; brand_id: string; kind: "pillar" | "territory"; code: string | null; name: string; sort: number;
   provisional: boolean; source_note: string | null; active: boolean; version: number;
   source_reference_id?: string | null;
+  description?: string | null;
 }
 export interface AccountRow {
   id: string; brand_id: string; name: string; slug: string; active: boolean;
@@ -52,6 +55,13 @@ export interface PieceRow {
   pillar_id?: string | null; territory_id?: string | null;
   content_origin?: ContentOrigin; material_status?: MaterialStatus; needs_copy?: boolean; event_name?: string | null;
   source_system?: "st_hub" | "onedrive" | "other" | null; source_entity_id?: string | null; source_url?: string | null;
+  library_idea_id?: string | null;
+}
+export interface LibraryIdeaRow {
+  id: string; brand_id: string; code: string; title: string; summary: string | null; pillar_id: string | null;
+  territory_id: string | null; suggested_format: string | null; format_key: string | null; suggested_production_mode: string | null;
+  production_level: string | null; stage: string | null; requirement_kind: string | null; requirements: string | null;
+  cta: string | null; source_reference_id: string | null; source_locator: string | null; active: boolean;
 }
 export type Category = "conectar" | "educativo" | "cobertura" | "institucional" | "promocional";
 export interface TemplateRow {
@@ -79,7 +89,7 @@ export interface BrainEntryRow {
   id: string; brand_id: string; account_id: string | null; category: BrainCategory; key: string | null; title: string;
   content: string | null; status: EntryStatus; provisional: boolean; claim_status: "confirmed" | "provisional" | "unsupported" | null;
   source_reference_id: string | null; source_locator: string | null; valid_from: string | null; valid_until: string | null;
-  sort: number; version: number;
+  sort: number; version: number; applies_to?: string[];
 }
 export interface ObservationRow {
   id: string; source_reference_id: string; source_state_raw: string; observed_status: ObservedStatus | null;
@@ -106,6 +116,8 @@ export interface Snapshot {
   axes: AxisRow[];
   /** V0.3: null si la migración 0010 no está aplicada. */
   brain: BrainEntryRow[] | null;
+  /** V0.4: null si la migración 0012 no está aplicada. */
+  library: LibraryIdeaRow[] | null;
   facts: PieceFact[];
   accountFacts: AccountFact[];
 }
@@ -118,7 +130,7 @@ async function all<T>(query: PromiseLike<{ data: T[] | null; error: { message: s
 
 /** Lectura coherente del estado necesario para cobertura y colas. */
 export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): Promise<Snapshot> {
-  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates, formats, modes, axes, brain] =
+  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates, formats, modes, axes, brain, library] =
     await Promise.all([
       all<BrandRow>(supabase.from("brands").select("*").order("name")),
       all<AccountRow>(supabase.from("accounts").select("*").order("name")),
@@ -135,6 +147,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       optional<CatalogRow>(supabase.from("production_modes").select("*").order("sort"), "modos de producción"),
       optional<AxisRow>(supabase.from("brand_axes").select("*").order("sort"), "ejes editoriales"),
       supabase.from("brain_entries").select("*").order("sort").then(({ data, error }) => (error ? null : ((data ?? []) as BrainEntryRow[]))),
+      supabase.from("idea_library").select("*").order("code").then(({ data, error }) => (error ? null : ((data ?? []) as LibraryIdeaRow[]))),
     ]);
 
   const assignmentMap = new Map(assignments.map((a) => [a.content_piece_id, a]));
@@ -210,6 +223,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
     modes,
     axes,
     brain,
+    library,
     facts,
     accountFacts: accounts.map((a) => ({
       id: a.id,

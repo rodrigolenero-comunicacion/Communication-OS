@@ -13,6 +13,10 @@ export type JsonSchema =
 
 const str = (description?: string): JsonSchema => ({ type: "string", ...(description ? { description } : {}) });
 const nullable = (s: JsonSchema): JsonSchema => ({ anyOf: [s, { type: "null" }] });
+/** Texto opcional SIN unión de tipos: cadena vacía = no aplica (la API limita las uniones a 16 por petición). */
+const opt = (description?: string): JsonSchema => str(description ? `${description}. Cadena vacía si no aplica` : "Cadena vacía si no aplica");
+/** Límite de la API: campos con anyOf/nullable por petición. Una prueba lo vigila. */
+export const MAX_UNION_FIELDS = 16;
 const list = (items: JsonSchema, description?: string): JsonSchema => ({ type: "array", items, ...(description ? { description } : {}) });
 const obj = (properties: Record<string, JsonSchema>, description?: string): JsonSchema => ({
   type: "object", properties, required: Object.keys(properties), additionalProperties: false, ...(description ? { description } : {}),
@@ -38,14 +42,14 @@ export function conceptSchema(o: SchemaOptions): JsonSchema {
     idea: str("La idea en una o dos frases"),
     objective: str("Qué debe lograr la pieza"),
     audience: str("A quién se dirige, según las audiencias del Brain"),
-    stage: nullable(oneOf(STAGES, "Etapa a la que se dirige; null si no aplica")),
+    stage: oneOf([...STAGES, ""], "Etapa a la que se dirige; cadena vacía si no aplica"),
     pillar: oneOf(o.pillarRefs, "Referencia del pilar (campo ref del contexto)"),
     territory: oneOf(o.territoryRefs, "Referencia del territorio (campo ref del contexto)"),
     suggested_format: oneOf(o.formatKeys),
     suggested_production_mode: oneOf(o.modeKeys),
     central_message: str("Mensaje que debe quedar"),
     editorial_reason: str("Por qué encaja con la estrategia; breve"),
-    similar_to: nullable(str("Pieza reciente o idea del banco parecida y en qué; null si no hay")),
+    similar_to: opt("Pieza reciente o idea del banco parecida y en qué"),
   });
 }
 
@@ -54,24 +58,24 @@ export function proposalsSchema(o: SchemaOptions): JsonSchema {
 }
 
 export function packageSchema(o: SchemaOptions): JsonSchema {
-  const sourceRef = o.sourceRefs.length > 0 ? nullable(oneOf(o.sourceRefs)) : ({ type: "null" } as JsonSchema);
+  const sourceRef = oneOf([...o.sourceRefs, ""], "ref de una fuente del contexto que respalde la afirmación; cadena vacía si ninguna");
   return obj({
     concept: str(), central_message: str(), objective: str(),
-    hook: nullable(str()), development: nullable(str()), closing: nullable(str()),
+    hook: opt(), development: opt(), closing: opt(),
     screen_text: list(str(), "Textos exactos en pantalla, en orden"),
-    voiceover: nullable(str()),
+    voiceover: opt(),
     teacher_lines: list(str(), "Como máximo dos líneas exactas de docente si se usan"),
     interaction_prompts: list(str(), "Preguntas detonadoras abiertas; nunca respuestas guionizadas de niños"),
     capture_guide: nullable(obj({
       moments: list(str()), direction: str(), broll: list(str()), privacy: str(), materials: list(str()),
     })),
     edit_structure: list(str(), "Estructura de edición por bloques"),
-    creative_brief: nullable(str()),
+    creative_brief: opt(),
     storyboard: list(obj({
-      scene: { type: "integer" }, timing: str(), bars: nullable(str("Compases")), text: str("Texto exacto"),
-      layout: str(), movement: str(), camera: nullable(str()), transition: nullable(str()), sound: nullable(str()),
+      scene: { type: "integer" }, timing: str(), bars: opt("Compases"), text: str("Texto exacto"),
+      layout: str(), movement: str(), camera: opt(), transition: opt(), sound: opt(),
     })),
-    carousel_slides: list(obj({ title: str(), body: str(), visual_direction: str(), source_credit: nullable(str()) })),
+    carousel_slides: list(obj({ title: str(), body: str(), visual_direction: str(), source_credit: opt() })),
     graphics_spec: list(obj({
       element: str(), function: str(), moment: str(), movement: str(), relation_to_image: str(), constraint: str(),
     })),
@@ -79,17 +83,17 @@ export function packageSchema(o: SchemaOptions): JsonSchema {
       intention: str(), rhythm: str(), key_moments: list(str()), timbres: list(str()), jingle_relation: str(),
       sfx: list(str()), level: str(),
     })),
-    caption: str(), cta: nullable(str()), alt_text: nullable(str()),
-    fallback: nullable(str("Plan B / versión estática")),
-    output: nullable(str("Entregables")),
+    caption: str(), cta: opt(), alt_text: opt(),
+    fallback: opt("Plan B / versión estática"),
+    output: opt("Entregables"),
     claims: list(obj({
       statement: str("Afirmación exacta que aparece en la pieza"),
       evidence_class: oneOf(EVIDENCE_CLASSES),
       source_ref: sourceRef,
-      on_screen_credit: nullable(str()),
+      on_screen_credit: opt(),
     })),
     dependencies: list(str(), "Condiciones necesarias antes de aprobar (autorizaciones, material, validaciones)"),
-    alternative: nullable(str()),
+    alternative: opt(),
   });
 }
 
@@ -157,13 +161,24 @@ export const PROPOSAL_COUNT: Record<ProposalMode, { min: number; max: number }> 
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
+/** Cadena vacía → null en campos de texto y sin vacíos en listas de texto (tras validar). */
+export function emptyToNull<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.filter((v) => !(typeof v === "string" && v.trim() === "")).map((v) => emptyToNull(v)) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, typeof v === "string" && v.trim() === "" ? null : emptyToNull(v)])) as T;
+  }
+  return value;
+}
+
 export function checkProposals(raw: unknown, mode: ProposalMode, o: SchemaOptions): Checked<ConceptOut[]> {
   const errors = validate(proposalsSchema(o), raw);
   if (errors.length) return { ok: false, errors };
-  const list = (raw as { proposals: ConceptOut[] }).proposals;
+  const list = emptyToNull((raw as { proposals: ConceptOut[] }).proposals);
   const { min, max } = PROPOSAL_COUNT[mode];
   if (list.length < min || list.length > max) return { ok: false, errors: [`Se esperaban entre ${min} y ${max} propuestas; llegaron ${list.length}`] };
-  const blank = list.findIndex((p) => !p.title.trim() || !p.idea.trim() || !p.central_message.trim());
+  const blank = list.findIndex((p) => !p.title || !p.idea || !p.central_message);
   if (blank >= 0) return { ok: false, errors: [`Propuesta ${blank + 1} incompleta`] };
   return { ok: true, value: list };
 }
@@ -171,9 +186,9 @@ export function checkProposals(raw: unknown, mode: ProposalMode, o: SchemaOption
 export function checkPackage(raw: unknown, o: SchemaOptions): Checked<PackageOut> {
   const errors = validate(packageSchema(o), raw);
   if (errors.length) return { ok: false, errors };
-  const p = raw as PackageOut;
   const problems: string[] = [];
-  if (!p.caption.trim()) problems.push("Falta el caption");
+  if (!(raw as PackageOut).caption.trim()) problems.push("Falta el caption");
+  const p = emptyToNull(raw as PackageOut);
   if (p.teacher_lines.length > 2) problems.push("Más de dos líneas de docente");
   if (p.claims.length > 30 || p.dependencies.length > 10) problems.push("Demasiados claims o dependencias");
   return problems.length ? { ok: false, errors: problems } : { ok: true, value: p };

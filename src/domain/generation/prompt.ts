@@ -9,7 +9,7 @@ export const SYSTEM_PROMPT = `Eres el generador editorial de Content OS. Trabaja
 Recibes un CONTEXTO en JSON con el Brain del cliente (estrategia, audiencias, voz, reglas, restricciones), sus pilares y territorios, sus fuentes, el contenido reciente y la petición. Ese contexto es la única autoridad sobre el cliente:
 - Aplica todas las reglas del contexto. Si dos reglas chocan, sigue la más restrictiva y dilo en el campo de razón.
 - Usa solo los pilares, territorios, formatos y modos listados, por su "ref" o "key".
-- No inventes datos, cifras, nombres, lugares, fechas, eventos, resultados ni fuentes. Si una afirmación necesita fuente y no hay una adecuada entre las fuentes del contexto, deja source_ref en null: el sistema la marcará como «Fuente necesaria».
+- No inventes datos, cifras, nombres, lugares, fechas, eventos, resultados ni fuentes. Si una afirmación necesita fuente y no hay una adecuada entre las fuentes del contexto, deja source_ref vacío: el sistema la marcará como «Fuente necesaria». En campos de texto que no apliquen, usa cadena vacía.
 - Prefiere invitaciones y observaciones a afirmaciones sobre efectos o beneficios.
 - No escribas nombres de personas ni datos de menores. No guionices respuestas de niños.
 - Evita repetir temas, ganchos, metáforas y conclusiones del contenido reciente; si algo se parece, indícalo.

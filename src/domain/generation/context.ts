@@ -68,6 +68,13 @@ export interface BuiltContext {
   refs: { pillars: Map<string, string>; territories: Map<string, string>; sources: Map<string, string> };
 }
 
+/** Quita correos y teléfonos del texto libre antes de enviarlo al proveedor (ids y fechas intactos). */
+export function redactPersonalData(text: string): string {
+  return text
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[correo omitido]")
+    .replace(/(?<![\w-])(?:\+\d{1,3}[\s.-]?)?\(?\d{2,3}\)?[\s.-]?\d{3,4}[\s.-]?\d{4}(?![\w-])/g, "[teléfono omitido]");
+}
+
 const RECENT_DAYS = 60;
 const RECENT_LIMIT = 12;
 
