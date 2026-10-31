@@ -71,6 +71,10 @@ const WORD_KEYS = ["hook", "on_screen", "final_line", "caption", "cta"] as const
 export const CLIENT_COLORS = ["blue", "yellow", "purple", "green", "red", "teal", "orange", "pink", "gray"] as const;
 const ORIGINS = ["own_idea", "develop", "generate", "research", "library"] as const;
 const CATALOG_KEY = /^[a-z0-9_]+$/;
+const SOURCE_TYPES = ["institutional_document", "internal_system", "web", "research", "decision", "reference", "other"] as const;
+const SOURCE_STATUSES = ["active", "superseded", "provisional", "archived"] as const;
+export const BRAIN_CATEGORIES = ["identity", "audience", "segment", "objective", "strategy", "voice", "editorial_rule",
+  "production_rule", "evidence_rule", "review_rule", "constraint", "claim", "learning"] as const;
 const CONTENT_ORIGIN_KEYS = ["organic", "event_coverage", "existing_material"] as const;
 function isNonOrganic(fd: FormData): boolean {
   const origin = raw(fd, "content_origin");
@@ -195,6 +199,34 @@ export const COMMANDS: Record<string, CommandSpec> = {
         p_brand_id: uuid(fd, "brand_id"), p_kind: oneOf(fd, "kind", ["pillar", "territory"] as const),
         p_code: text(fd, "code"), p_name: text(fd, "name"), p_sort: sort === null ? 0 : int(fd, "sort"),
         p_provisional: bool(fd, "provisional"), p_source_note: text(fd, "source_note"), p_active: bool(fd, "active") };
+    },
+  },
+  upsert_brand_source: {
+    rpc: "upsert_brand_source", success: "Fuente guardada",
+    params: (fd) => {
+      const sourceId = uuid(fd, "source_id", true);
+      return { p_source_id: sourceId, p_expected_version: sourceId ? int(fd, "expected_version") : null,
+        p_brand_id: uuid(fd, "brand_id"), p_title: text(fd, "title"), p_institution: text(fd, "institution"),
+        p_source_type: oneOf(fd, "source_type", SOURCE_TYPES), p_source_system: oneOf(fd, "source_system", SOURCE_SYSTEMS, true),
+        p_url: text(fd, "url"), p_document_name: text(fd, "document_name"), p_document_version: text(fd, "document_version"),
+        p_accessed_at: date(fd, "accessed_at", true), p_published_at: date(fd, "published_at", true),
+        p_status: oneOf(fd, "status", SOURCE_STATUSES), p_notes: text(fd, "notes"), p_locator: text(fd, "locator") };
+    },
+  },
+  upsert_brain_entry: {
+    rpc: "upsert_brain_entry", success: "Entrada guardada",
+    params: (fd) => {
+      const entryId = uuid(fd, "entry_id", true);
+      const category = oneOf(fd, "category", BRAIN_CATEGORIES)!;
+      const sort = text(fd, "sort");
+      return { p_entry_id: entryId, p_expected_version: entryId ? int(fd, "expected_version") : null,
+        p_brand_id: uuid(fd, "brand_id"), p_account_id: uuid(fd, "account_id", true), p_category: category,
+        p_key: text(fd, "key"), p_title: text(fd, "title"), p_content: text(fd, "content"),
+        p_status: oneOf(fd, "status", ["active", "superseded", "archived"] as const), p_provisional: bool(fd, "provisional"),
+        p_claim_status: category === "claim" ? oneOf(fd, "claim_status", ["confirmed", "provisional", "unsupported"] as const) : null,
+        p_source_reference_id: uuid(fd, "source_reference_id", true), p_source_locator: text(fd, "source_locator"),
+        p_valid_from: date(fd, "valid_from", true), p_valid_until: date(fd, "valid_until", true),
+        p_sort: sort === null ? 0 : int(fd, "sort") };
     },
   },
   upsert_template: {

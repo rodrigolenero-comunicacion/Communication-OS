@@ -2,6 +2,7 @@
 // Los cálculos (cobertura, runway, reserva) se hacen después, en src/domain.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ContentOrigin, MaterialStatus } from "@/domain/calendar";
+import type { BrainCategory, EntryStatus, SourceStatus } from "@/domain/brain";
 import type {
   AccountFact,
   Bucket,
@@ -25,6 +26,7 @@ export interface CatalogRow { key: string; label: string; sort: number; active: 
 export interface AxisRow {
   id: string; brand_id: string; kind: "pillar" | "territory"; code: string | null; name: string; sort: number;
   provisional: boolean; source_note: string | null; active: boolean; version: number;
+  source_reference_id?: string | null;
 }
 export interface AccountRow {
   id: string; brand_id: string; name: string; slug: string; active: boolean;
@@ -69,6 +71,15 @@ export interface SourceReferenceRow {
   relation_kind: "context_reference" | "external_mirror"; source_system: string;
   source_entity_type: string | null; source_entity_id: string | null; source_url: string | null;
   title: string; locator: string | null; scope_kind: "account" | "brand" | "public_general"; created_at: string;
+  // V0.3 (0010): metadatos de fuente; ausentes si la migración no está aplicada.
+  institution?: string | null; source_type?: string; document_name?: string | null; document_version?: string | null;
+  accessed_at?: string | null; published_at?: string | null; status?: SourceStatus; notes?: string | null; version?: number;
+}
+export interface BrainEntryRow {
+  id: string; brand_id: string; account_id: string | null; category: BrainCategory; key: string | null; title: string;
+  content: string | null; status: EntryStatus; provisional: boolean; claim_status: "confirmed" | "provisional" | "unsupported" | null;
+  source_reference_id: string | null; source_locator: string | null; valid_from: string | null; valid_until: string | null;
+  sort: number; version: number;
 }
 export interface ObservationRow {
   id: string; source_reference_id: string; source_state_raw: string; observed_status: ObservedStatus | null;
@@ -93,6 +104,8 @@ export interface Snapshot {
   formats: CatalogRow[];
   modes: CatalogRow[];
   axes: AxisRow[];
+  /** V0.3: null si la migración 0010 no está aplicada. */
+  brain: BrainEntryRow[] | null;
   facts: PieceFact[];
   accountFacts: AccountFact[];
 }
@@ -105,7 +118,7 @@ async function all<T>(query: PromiseLike<{ data: T[] | null; error: { message: s
 
 /** Lectura coherente del estado necesario para cobertura y colas. */
 export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): Promise<Snapshot> {
-  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates, formats, modes, axes] =
+  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates, formats, modes, axes, brain] =
     await Promise.all([
       all<BrandRow>(supabase.from("brands").select("*").order("name")),
       all<AccountRow>(supabase.from("accounts").select("*").order("name")),
@@ -121,6 +134,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       optional<CatalogRow>(supabase.from("content_formats").select("*").order("sort"), "formatos"),
       optional<CatalogRow>(supabase.from("production_modes").select("*").order("sort"), "modos de producción"),
       optional<AxisRow>(supabase.from("brand_axes").select("*").order("sort"), "ejes editoriales"),
+      supabase.from("brain_entries").select("*").order("sort").then(({ data, error }) => (error ? null : ((data ?? []) as BrainEntryRow[]))),
     ]);
 
   const assignmentMap = new Map(assignments.map((a) => [a.content_piece_id, a]));
@@ -195,6 +209,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
     formats,
     modes,
     axes,
+    brain,
     facts,
     accountFacts: accounts.map((a) => ({
       id: a.id,

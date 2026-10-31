@@ -59,3 +59,22 @@ const ov = () => run(`select version from public.content_pieces where id = '${or
 call("update_piece", { piece_id: org.piece_id, expected_version: ov(), title: "Orgánica editada", production_mode_key: "real_plus_graphics" });
 call("move_piece_day", { piece_id: org.piece_id, expected_version: ov(), date: nextDay });
 ok(field(org.piece_id, "title") === "Orgánica editada" && field(org.piece_id, "production_mode_key") === "real_plus_graphics", "Orgánica existente: edición y movimiento sin cambios");
+
+// V0.3 Client Brain: fuentes y entradas tal como las envían los formularios.
+const brain = (sql) => run(`select coalesce((${sql})::text, 'NULL')`);
+const src = call("upsert_brand_source", { brand_id: brand, title: "Manual RT", institution: "Tec", source_type: "institutional_document",
+  document_version: "v1", accessed_at: day, status: "active", notes: "" });
+ok(src.ok && brain(`select status || '/' || source_type || '/' || accessed_at from public.source_references where id = '${src.source_reference_id}'`) === `active/institutional_document/${day}`,
+  "Fuente del cliente se guarda con tipo, estado y fecha de consulta");
+const entry = call("upsert_brain_entry", { brand_id: brand, category: "editorial_rule", title: "Regla RT", content: "Texto", status: "active",
+  source_reference_id: src.source_reference_id, source_locator: "p. 3" });
+ok(entry.ok && brain(`select source_reference_id from public.brain_entries where id = '${entry.entry_id}'`) === src.source_reference_id, "Entrada queda trazada a su fuente");
+const ev2 = () => run(`select version from public.brain_entries where id = '${entry.entry_id}'`);
+call("upsert_brain_entry", { entry_id: entry.entry_id, expected_version: ev2(), brand_id: brand, category: "editorial_rule", title: "Regla RT", status: "active", provisional: "on" });
+ok(brain(`select provisional from public.brain_entries where id = '${entry.entry_id}'`) === "true", "Marcar provisional desde el formulario");
+const claim = call("upsert_brain_entry", { brand_id: brand, category: "claim", title: "Dato", status: "active", claim_status: "provisional" });
+ok(brain(`select provisional from public.brain_entries where id = '${claim.entry_id}'`) === "true", "Claim provisional queda marcado provisional");
+const other = JSON.parse(run(`select public.create_brand(gen_random_uuid(), 'Otro RT', 'otro-rt')`)).brand_id;
+let leak = "no lanzó";
+try { call("upsert_brain_entry", { brand_id: other, category: "voice", title: "Fuga", status: "active", source_reference_id: src.source_reference_id }); } catch (e) { leak = String(e.stderr); }
+ok(/otro cliente/.test(leak), "Una entrada de otro cliente no puede usar esta fuente");
