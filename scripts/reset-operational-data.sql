@@ -4,7 +4,8 @@
 --
 -- Borra solo lo operativo ligado a piezas: piezas, asignaciones, packets, claims,
 -- dependencias, decisiones, publicaciones, espejos y sus observaciones, fuentes
--- ligadas a piezas y los eventos de historial de esas piezas/publicaciones.
+-- ligadas a piezas, los eventos de historial de esas piezas/publicaciones y (V0.4) los
+-- registros de generación ligados a piezas. La biblioteca de ideas se conserva.
 --
 -- Conserva: usuario autorizado y auth, marcas, cuentas, canales, catálogos,
 -- plantillas, objetivos semanales y modo de cobertura, fuentes de contexto no
@@ -19,6 +20,14 @@ begin;
 alter table public.operation_events disable trigger operation_events_append_only;
 alter table public.review_decisions disable trigger review_decisions_append_only;
 alter table public.source_observations disable trigger source_observations_append_only;
+-- V0.4 (0012): registro técnico de generación, si existe. Se borran solo los registros ligados a piezas.
+do $$ begin
+  if to_regclass('public.generation_runs') is not null then
+    alter table public.generation_runs disable trigger generation_runs_append_only;
+    delete from public.generation_runs where content_piece_id is not null;
+    alter table public.generation_runs enable trigger generation_runs_append_only;
+  end if;
+end $$;
 
 delete from public.operation_events where content_piece_id is not null or publication_id is not null;
 delete from public.review_decisions;
@@ -38,7 +47,8 @@ alter table public.source_observations enable trigger source_observations_append
 
 commit;
 
--- Comprobación: lo operativo en 0, la configuración intacta y las protecciones activas (3).
+-- Comprobación: lo operativo en 0, la configuración intacta y las protecciones activas
+-- (3; 4 con la migración 0012 aplicada).
 select
   (select count(*) from public.content_pieces) as piezas,
   (select count(*) from public.publications) as publicaciones,
