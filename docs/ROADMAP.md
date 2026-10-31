@@ -1,13 +1,17 @@
 # Roadmap
 
-Versión activa: **V0.1 Manual Control Tower** (implementada, desplegada y usada en un recorrido real; piloto no iniciado).
+Versión activa: **V0.2 Calendar-First Editorial Studio** (activa en producción desde el 2026-10-31). V0.2.1 implementada, pendiente de activación (0009).
 Dirección vigente desde 2026-10-31: **Calendar-First Editorial Studio** (instrucción del propietario). Ver [AUDIT_V0_2.md](AUDIT_V0_2.md).
 
 ## Ahora: V0.2 — Calendar-First Editorial Studio (propuesta, pendiente de decisiones D1–D4)
 
 Calendario mensual como home, Day Studio (cliente → cuenta → agregar), flujo corto de creación (inicio → idea → formato → modo de producción → mínimos), tarjetas por cliente, mover de fecha, Content Bank. Control Tower, runway y gaps pasan a inteligencia secundaria. Sin IA real, investigación web, integraciones ni analítica.
 
-Preparado: auditoría y módulo de dominio del calendario (`src/domain/calendar.ts`, probado). Pendiente: migración 0008, vistas y flujo.
+Estado: implementada; reset operativo ejecutado y migración 0008 aplicada por el propietario; en uso.
+
+## V0.2.1 — Orígenes de contenido (Tec)
+
+Orgánico, cobertura/evento y material existente sin duplicar Communication Hub (ADR-004). Implementada en código; 0009 preparada, pendiente de aplicación manual; no verificada aún con sesión real.
 
 ## Después (orden tentativo, cada fase con diseño y autorización propios)
 

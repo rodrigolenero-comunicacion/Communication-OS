@@ -1,15 +1,15 @@
 # System Canon
 
-Estado: contrato de V0.1 (2026-10-27), con cambio de dirección registrado el 2026-10-31.
+Estado: contrato de V0.1 (2026-10-27), con cambio de dirección a Calendar-First el 2026-10-31.
 
 ## Estado actual vs objetivo (2026-10-31)
 
 | | Contenido |
 |---|---|
-| Versión activa | V0.1 Manual Control Tower: implementada, en producción (Netlify + Supabase propio), recorrido real PASS; piloto no iniciado |
-| Objetivo | V0.2 Calendar-First Editorial Studio: calendario mensual como puerta de entrada; Control Tower como inteligencia secundaria |
-| Decisión | Evolucionar el sistema actual, sin reconstrucción ([AUDIT_V0_2.md](AUDIT_V0_2.md)) |
-| Pendiente | D1 timing duro/blando al mover; D2 documento IJLV v1.4 (vigente, no recibido); D3 pilares Tec provisionales; D4 reset de la demostración |
+| Versión activa | **V0.2 Calendar-First Editorial Studio**: activa en producción y en uso por el propietario (reset operativo ejecutado y 0008 aplicada, confirmados por el propietario el 2026-10-31) |
+| Siguiente | **V0.2.1 Orígenes de contenido (Tec)**: implementada en código; migración 0009 preparada, pendiente de aplicación manual; **no verificada aún con sesión real** |
+| Decisión | Evolucionar el sistema actual, sin reconstrucción ([AUDIT_V0_2.md](AUDIT_V0_2.md), ADR-003, ADR-004) |
+| Pendiente | Aplicar 0009 y recorrido de aceptación V0.2.1; documento IJLV v1.4 (vigente, no recibido); validar ejes Tec provisionales contra fuente institucional |
 | Hipótesis | Las plantillas por categoría convivirán con formato × modo de producción hasta validar en uso |
 
 Los invariantes de abajo siguen vigentes. Las exclusiones de V0.1 (IA, investigación, integraciones) se mantienen en V0.2; la IA está aprobada como fase posterior con regla «IA ≠ aprobación».

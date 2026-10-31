@@ -1,6 +1,6 @@
 # ADR-003 — V0.2 Calendar-First Editorial Studio
 
-Fecha: 2026-10-31. Estado: aprobada por el propietario (decisiones D1–D4) e implementada en código; migración 0008 preparada, **no aplicada** en producción al cerrar esta ADR.
+Fecha: 2026-10-31. Estado: aprobada por el propietario (decisiones D1–D4) e implementada en código; migración 0008 **aplicada** en producción por el propietario (confirmado el 2026-10-31, tras ejecutar el reset operativo). V0.2 activa.
 
 ## Decisiones del propietario
 

@@ -1,6 +1,6 @@
 # ADR-004 — V0.2.1 Orígenes de contenido (Tec)
 
-Fecha: 2026-10-31. Estado: implementada en código; migración `20261031000009_content_origins.sql` **preparada, no aplicada** en producción.
+Fecha: 2026-10-31. Estado: implementada en código; migración `20261031000009_content_origins.sql` **preparada, pendiente de aplicación manual** por el propietario. No verificada aún con sesión real.
 
 ## Contexto
 
