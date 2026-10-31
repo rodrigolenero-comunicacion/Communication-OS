@@ -1,4 +1,5 @@
 import { loadContext, newRequestId } from "@/application/context";
+import type { AxisRow } from "@/infrastructure/data";
 import { CommandForm } from "@/components/CommandForm";
 import { BUCKET_LABEL, HEALTH_LABEL, HEALTH_TONE, SOURCE_LABEL, fmtDate, fmtWeek } from "@/components/format";
 import { Badge, Card, Details, Empty, Field, PageHeader, SafeLink, Section } from "@/components/ui";
@@ -17,14 +18,14 @@ const REFERENCE_TARGETS = [
 
 export default async function PortfolioPage() {
   const { snapshot, reports } = await loadContext();
-  const { brands, accounts, channels, accountChannels, targetRows, references, now } = snapshot;
+  const { brands, accounts, channels, accountChannels, targetRows, references, now, axes } = snapshot;
   const mondays = horizonWeeks(now, 13);
   const w0 = currentWeekStart(now);
 
   return (
     <>
       <PageHeader
-        title="Portfolio"
+        title="Clientes"
         subtitle="Marcas, cuentas editoriales, canales activos y objetivos semanales. Los objetivos se configuran con tu confirmación; no hay valores precargados."
       />
 
@@ -34,17 +35,59 @@ export default async function PortfolioPage() {
           {brands.map((brand) => (
             <Card key={brand.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold">{brand.name}</h3>
-                  {!brand.active && <Badge>Inactiva</Badge>}
+                <div className={`client-${brand.color ?? "gray"}`}>
+                  <h3 className="text-lg font-semibold">
+                    <span className="client-dot mr-2" aria-hidden="true" />
+                    {brand.name} <span className="client-tag text-sm">{brand.short_label}</span>
+                  </h3>
+                  {!brand.active && <Badge>Inactivo</Badge>}
                 </div>
-                <Details summary="Editar marca">
-                  <CommandForm command="update_brand" requestId={newRequestId()} hidden={{ brand_id: brand.id, expected_version: brand.version }} submitLabel="Guardar">
-                    <Field label="Nombre"><input name="name" defaultValue={brand.name} required className="input" /></Field>
-                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={brand.active} /> Activa</label>
-                  </CommandForm>
-                </Details>
+                <div className="flex flex-wrap gap-2">
+                  <Details summary="Editar cliente">
+                    <CommandForm command="update_brand" requestId={newRequestId()} hidden={{ brand_id: brand.id, expected_version: brand.version }} submitLabel="Guardar">
+                      <Field label="Nombre"><input name="name" defaultValue={brand.name} required className="input" /></Field>
+                      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={brand.active} /> Activo</label>
+                    </CommandForm>
+                  </Details>
+                  {snapshot.formats.length > 0 && (
+                    <Details summary="Apariencia">
+                      <CommandForm command="set_brand_appearance" requestId={newRequestId()} hidden={{ brand_id: brand.id, expected_version: brand.version }} submitLabel="Guardar">
+                        <Field label="Color en el calendario" hint="Siempre se muestra junto a la etiqueta.">
+                          <select name="color" defaultValue={brand.color ?? "gray"} className="input">
+                            {Object.entries(COLOR_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
+                        </Field>
+                        <Field label="Etiqueta corta (máx. 12)"><input name="short_label" defaultValue={brand.short_label ?? ""} maxLength={12} className="input" /></Field>
+                      </CommandForm>
+                    </Details>
+                  )}
+                </div>
               </div>
+
+              {snapshot.formats.length > 0 && (
+                <div className="mt-4 rounded-md border border-line p-3">
+                  <h4 className="text-sm font-semibold">Pilares y territorios</h4>
+                  {axes.filter((x) => x.brand_id === brand.id).length === 0 ? (
+                    <p className="mt-1 text-sm text-muted">Sin ejes configurados.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-2 text-sm">
+                      {axes.filter((x) => x.brand_id === brand.id).map((x) => (
+                        <li key={x.id}>
+                          <Details summary={`${x.kind === "pillar" ? "Pilar" : "Territorio"} · ${x.code ? `${x.code} · ` : ""}${x.name}${x.provisional ? " · provisional" : ""}${x.active ? "" : " · inactivo"}`}>
+                            {x.source_note && <p className="mb-2 text-xs text-warn">{x.source_note}</p>}
+                            <AxisForm axis={x} brandId={brand.id} />
+                          </Details>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="mt-2">
+                    <Details summary="Agregar pilar o territorio">
+                      <AxisForm brandId={brand.id} />
+                    </Details>
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 space-y-4">
                 {accounts.filter((a) => a.brand_id === brand.id).map((account) => {
@@ -223,5 +266,33 @@ export default async function PortfolioPage() {
         </div>
       </Section>
     </>
+  );
+}
+
+const COLOR_LABEL: Record<string, string> = {
+  blue: "Azul", yellow: "Amarillo", purple: "Morado", green: "Verde", red: "Rojo",
+  teal: "Turquesa", orange: "Naranja", pink: "Rosa", gray: "Gris",
+};
+
+function AxisForm({ axis, brandId }: { axis?: AxisRow; brandId: string }) {
+  return (
+    <CommandForm command="upsert_brand_axis" requestId={newRequestId()} submitLabel="Guardar"
+      hidden={{ axis_id: axis?.id, expected_version: axis?.version, brand_id: brandId }}>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field label="Tipo">
+          {axis ? (
+            <><input type="hidden" name="kind" value={axis.kind} /><span className="text-sm">{axis.kind === "pillar" ? "Pilar" : "Territorio"}</span></>
+          ) : (
+            <select name="kind" className="input"><option value="pillar">Pilar</option><option value="territory">Territorio</option></select>
+          )}
+        </Field>
+        <Field label="Código (opcional)"><input name="code" defaultValue={axis?.code ?? ""} maxLength={12} className="input" /></Field>
+        <Field label="Orden"><input name="sort" type="number" defaultValue={axis?.sort ?? 0} className="input" /></Field>
+      </div>
+      <Field label="Nombre"><input name="name" defaultValue={axis?.name ?? ""} required className="input" /></Field>
+      <Field label="Nota de fuente" hint="De dónde sale este eje (documento, versión, fecha)."><input name="source_note" defaultValue={axis?.source_note ?? ""} className="input" /></Field>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="provisional" defaultChecked={axis?.provisional ?? false} /> Provisional (pendiente de validar contra fuente)</label>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={axis?.active ?? true} /> Activo</label>
+    </CommandForm>
   );
 }

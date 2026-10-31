@@ -2,7 +2,7 @@
 
 ## Misión y lectura
 
-Construye V0.1 Manual Control Tower, un cockpit editorial personal. Content OS coordina; los sistemas fuente conservan sus dominios.
+Content OS es un cockpit editorial personal. V0.1 Manual Control Tower está implementada; la dirección vigente es **V0.2 Calendar-First Editorial Studio** (ver `docs/AUDIT_V0_2.md` y `docs/DECISIONS/003_V0_2_CALENDAR_FIRST.md`): evolucionar, no reconstruir. Content OS coordina; los sistemas fuente conservan sus dominios.
 
 Lee, en orden:
 1. `docs/SYSTEM_CANON.md`.

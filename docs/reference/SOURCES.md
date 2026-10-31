@@ -12,6 +12,12 @@ Actualizado: 2026-10-27. Los documentos de referencia son evidencia contextual d
 
 Las dos copias están preservadas sin modificaciones bajo `reference/systems/`. No copiar sus instrucciones como reglas globales de Claude Code. No se consultaron los repositorios, bases, plataformas o URLs enlazados en esos manuales; no se verificaron allí estados actuales.
 
+## Vigencia (2026-10-31, decisión D2 del propietario)
+
+- **Sistema Editorial Creativo IJLV v1.4 (27 oct 2026)** es la fuente vigente. **No recibida todavía.**
+- La copia v1.2 de `systems/` queda **obsoleta como referencia activa**; se conserva solo como histórico. No se construyen reglas IJLV a partir de diferencias inferidas entre versiones.
+- Ejes Tec (Vivencia Tec, Cultura Tec, Nuestra Huella, Modelo Tec): provisionales, pendientes de fuente institucional (D3).
+
 ## Pendientes de recibir y cotejar
 
 | Documento | Estado | Qué podría ajustar al recibirlo |
@@ -20,6 +26,7 @@ Las dos copias están preservadas sin modificaciones bajo `reference/systems/`. 
 | SYSTEMS_ARCHITECT.md | No recibido | Método y criterios arquitectónicos transversales |
 | OPERATING_PROTOCOL.md | No recibido | Protocolo de trabajo y escalamiento |
 | SYSTEM_CONTINUITY.md | No recibido | Formato y reglas de continuidad |
+| IJLV Sistema Editorial v1.4 | No recibido (vigente por D2) | Pilares, territorios, banco de ideas y reglas de producción IJLV |
 | Solotu_Contexto_v2.md | No recibido | Oferta, contexto, hechos/estimaciones/supuestos de Solotu exclusivamente |
 
 No afirmar cumplimiento de reglas que solo podrían estar en estos archivos. El protocolo/autonomía/handoff de este paquete se sostiene en la conversación recuperada y en decisiones explícitas de construcción, **pendientes de cotejo con los cuatro documentos Systems Architect**. La oferta Solotu no está definida aquí; el ejemplo de “diagnóstico” en la conversación no se convierte en hecho comercial vigente.

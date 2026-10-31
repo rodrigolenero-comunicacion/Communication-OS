@@ -103,6 +103,40 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - **Verificado:** dominio 39/39 PASS (también con `TZ=Asia/Tokyo`); base 216 PASS; tipos OK. Sin cambios de esquema ni datos.
 - **Bloqueado por decisión del propietario:** D1–D4 (ver auditoría). Migración 0008 y vistas no iniciadas.
 
+## Sesión 2 (cont.) · 2026-10-31 · V0.2 Calendar-First implementada en código
+
+**Implementado**
+- Gate D4: el reset borraba historial de configuración, fuentes de contexto y objetivos → corregido para borrar solo lo ligado a piezas; nueva `scripts/reset-preview.sql` (solo lectura).
+- Migración `20261031000008_calendar_first.sql` (aditiva): día planeado, catálogos de formato y modo, ejes por cliente con aislamiento, apariencia de cliente, `create_calendar_piece`, `move_piece_day` (D1), `update_piece` ampliado. Configuración provisional D3 (colores por slug, 4 ejes Tec provisionales); IJLV sin ejes (D2).
+- UI: `/` calendario mensual (navegación de meses, tarjetas por cliente con color + etiqueta + formato · eje + estado con símbolo, arrastrar y soltar, vista de puntos en móvil, línea de gaps de la próxima semana); `/dia/[fecha]` Day Studio (clientes desplegables → cuentas → «+ Agregar contenido», mover por fecha); `/dia/[fecha]/nuevo` flujo de 5 pasos (solo «Ya tengo una idea» funcional); `/banco` Content Bank (Ideas, Borradores, Listas sin fecha, «Agendar»); `/operacion` (Control Tower movido); Clientes con apariencia y ejes; ficha con fecha de calendario y campos de idea/formato/modo/ejes; navegación Calendario · Banco · Operación · Más.
+
+**Pruebas ejecutadas (PASS)**
+- Dominio: 40/40 (`npm test`, también con `TZ=Asia/Tokyo`).
+- PostgreSQL 16 local con shim de auth: 11 archivos, 256 aserciones (nuevos: `09_calendar.sql` 26, `10_provisional_config.mjs` 5; reset 11; contrato UI↔SQL 44).
+- `npm run typecheck` OK; `npm run build` OK (rutas `/`, `/dia/[fecha]`, `/dia/[fecha]/nuevo`, `/banco`, `/operacion`).
+
+**Migración**
+- 0008 **preparada y probada localmente**, incluido su efecto sobre una base con clientes existentes como producción. **No aplicada** en Supabase.
+
+**Verificado localmente / no verificado**
+- Verificado: reglas de base (D1 completo, aislamiento de ejes, integridad día/semana), contrato de parámetros, tipos y build.
+- **No verificado:** recorrido de interfaz con sesión real (calendario → día → crear → tarjeta → mover/arrastrar). Sin PostgREST/Auth locales ni credenciales del propietario. Pendiente de recorrido humano tras aplicar 0008.
+
+**Despliegue**
+- Código subido a la rama que Netlify despliega; Netlify desplegará automáticamente. Sin la 0008, la app carga y muestra el aviso «Falta aplicar la migración 0008». Estado del deploy no verificado desde aquí (red bloquea Netlify).
+
+**Orden de aplicación para el propietario**
+1. `scripts/reset-preview.sql` → confirmar que solo aparecen piezas de la demostración.
+2. `scripts/reset-operational-data.sql`.
+3. `supabase/migrations/20261031000008_calendar_first.sql`.
+4. Recorrido V0.2 y retirar el objetivo de prueba de Solotu desde Clientes si no es real.
+
+**Riesgos / pendientes**
+- Arrastre con `window.confirm` para «convertir en flexible»: funcional y accesible, pero básico.
+- IJLV v1.4 sin recibir: IJLV aún sin pilares/territorios.
+- Plantillas por categoría (V0.1+) y formato × modo (V0.2) conviven; validar en uso antes de unificar.
+- Tarjetas en móvil se muestran como puntos de color con acceso al día; validar en uso real.
+
 ## Siguiente unidad
 
 1. Rodrigo: crear el proyecto Supabase siguiendo README §«Configuración de Supabase» (pasos 1–7) y compartir solo el resultado de `npm run verify:supabase` (nunca claves).

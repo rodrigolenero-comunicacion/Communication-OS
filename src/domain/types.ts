@@ -69,6 +69,8 @@ export interface PieceFact {
   approvedRevision: number | null;
   timing: Timing;
   assignedWeek: LocalDate | null;
+  /** Día del calendario dentro de la semana asignada (V0.2); null si solo hay semana. */
+  plannedDate?: LocalDate | null;
   publications: PublicationFact[];
   latestObservation: SourceObservationFact | null;
 }

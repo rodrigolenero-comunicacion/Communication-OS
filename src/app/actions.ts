@@ -11,6 +11,8 @@ export interface CommandResult {
   ok: boolean;
   message: string;
   at: number;
+  /** Código de error de la base (p. ej. CO412 = requiere confirmar «Mover y convertir en flexible»). */
+  code?: string;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,17 +41,16 @@ export async function runCommand(_prev: CommandResult | null, fd: FormData): Pro
   }
   const { data, error } = await session.supabase.rpc(spec.rpc, { p_request_id: requestId, ...params });
   if (error) {
-    return {
-      ok: false,
-      message: error.code === "CO409" ? `${error.message}` : describeError(error),
-      at,
-    };
+    return { ok: false, message: describeError(error), at, code: error.code };
   }
   revalidatePath("/", "layout");
   // Al crear una pieza o un espejo, se abre su ficha para continuar el flujo.
   const pieceId = (data as { piece_id?: string } | null)?.piece_id;
   if ((name === "create_piece" || name === "quick_create_piece" || name === "create_external_mirror") && pieceId && UUID.test(pieceId)) {
     redirect(`/piezas/${pieceId}`);
+  }
+  if (name === "create_calendar_piece" && pieceId && UUID.test(pieceId)) {
+    redirect(`/dia/${String(fd.get("planned_date"))}?nueva=${pieceId}`);
   }
   const replayed = Boolean((data as { replayed?: boolean } | null)?.replayed);
   return { ok: true, message: replayed ? `${spec.success} (ya estaba registrado)` : spec.success, at };

@@ -70,3 +70,46 @@ table.data th {
 table.data td {
   @apply border-b border-line px-2 py-2 align-top;
 }
+
+/* Identidad visual secundaria por cliente. Nunca es el único indicador: va con su etiqueta. */
+.client-blue { --client: #2563c9; }
+.client-yellow { --client: #b8860b; }
+.client-purple { --client: #7c4dc4; }
+.client-green { --client: #1d7a46; }
+.client-red { --client: #b3261e; }
+.client-teal { --client: #0f7c7c; }
+.client-orange { --client: #c2570c; }
+.client-pink { --client: #b8326e; }
+.client-gray { --client: #6b6f75; }
+
+@media (prefers-color-scheme: dark) {
+  .client-blue { --client: #7aa7ec; }
+  .client-yellow { --client: #e6c04a; }
+  .client-purple { --client: #b392f0; }
+  .client-green { --client: #5cc28a; }
+  .client-red { --client: #f07a72; }
+  .client-teal { --client: #4fc4c4; }
+  .client-orange { --client: #f0a060; }
+  .client-pink { --client: #f08cb8; }
+  .client-gray { --client: #a4a8ad; }
+}
+
+.client-stripe {
+  border-left: 4px solid var(--client);
+}
+.client-tag {
+  color: var(--client);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.client-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  background: var(--client);
+}
+.drop-target {
+  outline: 2px dashed var(--info);
+  outline-offset: -2px;
+}

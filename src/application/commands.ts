@@ -68,6 +68,15 @@ const FORMATS = ["post", "carousel", "reel", "video", "story", "other"] as const
 const SOURCE_SYSTEMS = ["manual", "st_hub", "ijlv_editorial", "solotu_cerebro"] as const;
 export const CATEGORIES = ["conectar", "educativo", "cobertura", "institucional", "promocional"] as const;
 const WORD_KEYS = ["hook", "on_screen", "final_line", "caption", "cta"] as const;
+export const CLIENT_COLORS = ["blue", "yellow", "purple", "green", "red", "teal", "orange", "pink", "gray"] as const;
+const ORIGINS = ["own_idea", "develop", "generate", "research", "library"] as const;
+const CATALOG_KEY = /^[a-z0-9_]+$/;
+function catalogKey(fd: FormData, name: string, optional = false): string | null {
+  const v = text(fd, name);
+  if (v === null && optional) return null;
+  if (!v || !CATALOG_KEY.test(v)) throw new InputError(`Elige una opción: ${name}`);
+  return v;
+}
 const OBSERVED = ["idea", "planned", "in_production", "in_review", "changes_requested", "approved", "unknown"] as const;
 
 const pieceVersion = (fd: FormData) => ({ p_piece_id: uuid(fd, "piece_id"), p_expected_version: int(fd, "expected_version") });
@@ -137,6 +146,34 @@ export const COMMANDS: Record<string, CommandSpec> = {
       p_template_id: uuid(fd, "template_id", true), p_week_start: date(fd, "week_start", true),
       p_initial_stage: oneOf(fd, "initial_stage", ["idea", "planned", "in_production"] as const, true) }),
   },
+  create_calendar_piece: {
+    rpc: "create_calendar_piece", success: "Contenido guardado en el calendario",
+    params: (fd) => ({ p_account_id: uuid(fd, "account_id"), p_planned_date: date(fd, "planned_date"),
+      p_title: text(fd, "title"), p_idea: text(fd, "idea"), p_origin: oneOf(fd, "origin", ORIGINS, true) ?? "own_idea",
+      p_format_key: catalogKey(fd, "format_key"), p_production_mode_key: catalogKey(fd, "production_mode_key"),
+      p_pillar_id: uuid(fd, "pillar_id", true), p_territory_id: uuid(fd, "territory_id", true),
+      p_bucket: oneOf(fd, "bucket", BUCKETS, true) ?? "feed" }),
+  },
+  move_piece_day: {
+    rpc: "move_piece_day", success: "Fecha actualizada",
+    params: (fd) => ({ ...pieceVersion(fd), p_date: date(fd, "date"), p_make_flexible: bool(fd, "make_flexible") }),
+  },
+  set_brand_appearance: {
+    rpc: "set_brand_appearance", success: "Apariencia guardada",
+    params: (fd) => ({ p_brand_id: uuid(fd, "brand_id"), p_expected_version: int(fd, "expected_version"),
+      p_color: oneOf(fd, "color", CLIENT_COLORS), p_short_label: text(fd, "short_label") }),
+  },
+  upsert_brand_axis: {
+    rpc: "upsert_brand_axis", success: "Eje guardado",
+    params: (fd) => {
+      const axisId = uuid(fd, "axis_id", true);
+      const sort = text(fd, "sort");
+      return { p_axis_id: axisId, p_expected_version: axisId ? int(fd, "expected_version") : null,
+        p_brand_id: uuid(fd, "brand_id"), p_kind: oneOf(fd, "kind", ["pillar", "territory"] as const),
+        p_code: text(fd, "code"), p_name: text(fd, "name"), p_sort: sort === null ? 0 : int(fd, "sort"),
+        p_provisional: bool(fd, "provisional"), p_source_note: text(fd, "source_note"), p_active: bool(fd, "active") };
+    },
+  },
   upsert_template: {
     rpc: "upsert_template", success: "Plantilla guardada",
     params: (fd) => {
@@ -171,6 +208,11 @@ export const COMMANDS: Record<string, CommandSpec> = {
       for (const f of PIECE_TEXT_FIELDS) if (fd.has(f)) changes[f] = text(fd, f) ?? "";
       if (fd.has("due_date")) changes.due_date = date(fd, "due_date", true) ?? "";
       if (fd.has("priority")) changes.priority = oneOf(fd, "priority", ["normal", "high"] as const);
+      if (fd.has("idea")) changes.idea = text(fd, "idea") ?? "";
+      if (fd.has("format_key")) changes.format_key = catalogKey(fd, "format_key", true) ?? "";
+      if (fd.has("production_mode_key")) changes.production_mode_key = catalogKey(fd, "production_mode_key", true) ?? "";
+      if (fd.has("pillar_id")) changes.pillar_id = uuid(fd, "pillar_id", true) ?? "";
+      if (fd.has("territory_id")) changes.territory_id = uuid(fd, "territory_id", true) ?? "";
       if (fd.has("timing_mode")) {
         const t = timing(fd);
         Object.assign(changes, { timing_mode: t.p_timing_mode, fixed_date: t.p_fixed_date ?? "",

@@ -4,7 +4,7 @@ import { useActionState, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { runCommand, type CommandResult } from "@/app/actions";
 
-function Submit({ label, tone }: { label: string; tone: "primary" | "secondary" | "danger" }) {
+export function Submit({ label, tone = "primary" }: { label: string; tone?: "primary" | "secondary" | "danger" }) {
   const { pending } = useFormStatus();
   const styles = {
     primary: "bg-ink text-paper hover:opacity-90",
@@ -31,6 +31,7 @@ export function CommandForm({
   children,
   className = "",
   inline = false,
+  showSubmit = true,
 }: {
   command: string;
   requestId: string;
@@ -40,6 +41,8 @@ export function CommandForm({
   children?: ReactNode;
   className?: string;
   inline?: boolean;
+  /** false: el formulario renderiza su propio <Submit /> (p. ej. en el último paso). */
+  showSubmit?: boolean;
 }) {
   const [state, action] = useActionState<CommandResult | null, FormData>(runCommand, null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -52,7 +55,7 @@ export function CommandForm({
       )}
       {children}
       <div className="flex flex-wrap items-center gap-3">
-        <Submit label={submitLabel} tone={tone} />
+        {showSubmit && <Submit label={submitLabel} tone={tone} />}
         {state && (
           <p role="status" aria-live="polite" className={`text-sm ${state.ok ? "text-good" : "text-bad"}`}>
             {state.message}

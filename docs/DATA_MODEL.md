@@ -104,6 +104,15 @@ Append-only; registrar mediante comando. observed_at no futuro; ordenar observac
 
 Historial append-only mínimo para cambios de estado no editoriales, reasignación, programación, publicación, cancelación y correcciones. No event sourcing: tablas operativas siguen siendo estado actual. No meter secretos en snapshots. Decisiones de revisión están en su propia tabla, no duplicarlas como fuente de verdad.
 
+## Adiciones V0.2 (migración 0008, ver ADR-003)
+
+- `brands.color` (paleta acotada) y `brands.short_label`.
+- `content_formats` y `production_modes`: catálogos `key/label/sort/active`, solo lectura para la API.
+- `brand_axes`: pilares y territorios por cliente (`kind`, `code`, `name`, `provisional`, `source_note`). Un trigger impide asignar a una pieza un eje de otro cliente o de otro tipo.
+- `content_pieces`: `idea`, `origin` (own_idea/develop/generate/research/library), `format_key`, `production_mode_key`, `pillar_id`, `territory_id`.
+- `planning_assignments.planned_date`: día dentro de `[week_start, week_start+7)`; si otro comando cambia la semana y el día queda fuera, se limpia.
+- Comandos: `create_calendar_piece`, `move_piece_day` (CO412 si requiere convertir en flexible), `set_brand_appearance`, `upsert_brand_axis`; `update_piece` acepta idea, formato, modo y ejes como cambios materiales.
+
 ## Entidades calculadas o diferidas
 
 Portfolio y PlanningWindow son vistas/objetos de dominio. Coverage, Runway, BufferHealth, ReservePool y EditorialNeed se calculan, no tienen tabla materializada. MetricSnapshot, AgentProposal, jobs, integrations y métricas quedan fuera. No guardar un measurement_status sin funcionalidad real; la medición es un eje conceptual futuro separado de producción/publicación.

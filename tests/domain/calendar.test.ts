@@ -44,3 +44,18 @@ test("estado de tarjeta derivado sin máquina paralela", () => {
   assert.equal(cardStatus({ ...base, ownership: "external", productionStatus: null }).key, "external");
   assert.equal(cardStatus({ ...base, productionStatus: "in_review" }).symbol, "◐");
 });
+
+test("día de calendario: planeado, si no publicado, si no programado", async () => {
+  const { calendarDateOf, canMoveByDrag } = await import("../../src/domain/calendar.ts");
+  assert.equal(calendarDateOf({ plannedDate: "2026-11-04", publications: [] }), "2026-11-04");
+  assert.equal(calendarDateOf({ plannedDate: null, publications: [] }), null);
+  const sched = pub("s", { status: "scheduled", scheduledAt: new Date("2026-11-05T17:00:00Z") });
+  const done = pub("p", { status: "published", publishedAt: new Date("2026-11-03T05:30:00Z") }); // 2 nov 23:30 CDMX
+  assert.equal(calendarDateOf({ plannedDate: null, publications: [sched] }), "2026-11-05");
+  assert.equal(calendarDateOf({ plannedDate: null, publications: [sched, done] }), "2026-11-02");
+  assert.equal(canMoveByDrag({ archived: false, publications: [] }), true);
+  assert.equal(canMoveByDrag({ archived: false, publications: [pub("u")] }), true);
+  assert.equal(canMoveByDrag({ archived: false, publications: [sched] }), false);
+  assert.equal(canMoveByDrag({ archived: false, publications: [done] }), false);
+  assert.equal(canMoveByDrag({ archived: true, publications: [] }), false);
+});

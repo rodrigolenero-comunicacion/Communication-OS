@@ -12,6 +12,10 @@ Cada cuenta declara `coverage_mode`: unconfigured, weekly o not_required. El alt
 
 PlanningWindow es una semana local lunes 00:00 inclusive → lunes siguiente 00:00 exclusivo, zona `America/Mexico_City`. La clave es la fecha local del lunes, no un número de semana aislado. Se puede calcular al consultar; la asignación guarda esa fecha. No se materializan ventanas por cron.
 
+## Calendario (V0.2)
+
+El calendario muestra cada pieza no archivada en su día: el día planeado o, si no existe, el de su primera publicación confirmada o programada. Sin fecha, la pieza vive en el Content Bank. Mover de día sigue D1 (ADR-003): libre si es flexible; fuera de fecha fija o ventana solo con «Mover y convertir en flexible»; bloqueado con publicación programada o confirmada. El estado de la tarjeta se deriva de los estados existentes; no hay una segunda máquina de estados.
+
 ## Pieza, asignación y publicación
 
 ContentPiece contiene título, cuenta, bucket, tipo de contenido, objetivo, audiencia, rol editorial libre, campaña/tema, responsable libre, vencimiento, prioridad y material de revisión. No imponer taxonomía estratégica universal.

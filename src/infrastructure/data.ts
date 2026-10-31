@@ -13,7 +13,16 @@ import type {
   TimingMode,
 } from "@/domain/types";
 
-export interface BrandRow { id: string; name: string; slug: string; active: boolean; version: number }
+export type ClientColor = "blue" | "yellow" | "purple" | "green" | "red" | "teal" | "orange" | "pink" | "gray";
+export interface BrandRow {
+  id: string; name: string; slug: string; active: boolean; version: number;
+  color?: ClientColor; short_label?: string | null;
+}
+export interface CatalogRow { key: string; label: string; sort: number; active: boolean }
+export interface AxisRow {
+  id: string; brand_id: string; kind: "pillar" | "territory"; code: string | null; name: string; sort: number;
+  provisional: boolean; source_note: string | null; active: boolean; version: number;
+}
 export interface AccountRow {
   id: string; brand_id: string; name: string; slug: string; active: boolean;
   context_notes: string | null; coverage_mode: CoverageMode; version: number;
@@ -34,6 +43,8 @@ export interface PieceRow {
   production_spec_text: string | null; production_spec_url: string | null; version: number;
   created_at: string; updated_at: string;
   category: Category | null; template_id: string | null;
+  idea?: string | null; origin?: string | null; format_key?: string | null; production_mode_key?: string | null;
+  pillar_id?: string | null; territory_id?: string | null;
 }
 export type Category = "conectar" | "educativo" | "cobertura" | "institucional" | "promocional";
 export interface TemplateRow {
@@ -41,7 +52,7 @@ export interface TemplateRow {
   suggested_format: string | null; objective: string | null; audience: string | null; experience: string | null;
   spec_text: string | null; words_guide: Record<string, string>; is_draft: boolean; active: boolean; version: number;
 }
-export interface AssignmentRow { id: string; content_piece_id: string; week_start: string; version: number }
+export interface AssignmentRow { id: string; content_piece_id: string; week_start: string; planned_date?: string | null; version: number }
 export interface PublicationRow {
   id: string; content_piece_id: string; channel_id: string; format: string; status: PublicationStatus;
   scheduled_at: string | null; published_at: string | null; external_post_id: string | null;
@@ -74,6 +85,9 @@ export interface Snapshot {
   references: SourceReferenceRow[];
   observations: ObservationRow[];
   templates: TemplateRow[];
+  formats: CatalogRow[];
+  modes: CatalogRow[];
+  axes: AxisRow[];
   facts: PieceFact[];
   accountFacts: AccountFact[];
 }
@@ -86,7 +100,7 @@ async function all<T>(query: PromiseLike<{ data: T[] | null; error: { message: s
 
 /** Lectura coherente del estado necesario para cobertura y colas. */
 export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): Promise<Snapshot> {
-  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates] =
+  const [brands, accounts, channels, accountChannels, targetRows, pieces, assignments, publications, references, observations, templates, formats, modes, axes] =
     await Promise.all([
       all<BrandRow>(supabase.from("brands").select("*").order("name")),
       all<AccountRow>(supabase.from("accounts").select("*").order("name")),
@@ -99,6 +113,9 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       all<SourceReferenceRow>(supabase.from("source_references").select("*").order("created_at")),
       all<ObservationRow>(supabase.from("source_observations").select("*")),
       optionalTemplates(supabase),
+      optional<CatalogRow>(supabase.from("content_formats").select("*").order("sort"), "formatos"),
+      optional<CatalogRow>(supabase.from("production_modes").select("*").order("sort"), "modos de producción"),
+      optional<AxisRow>(supabase.from("brand_axes").select("*").order("sort"), "ejes editoriales"),
     ]);
 
   const assignmentMap = new Map(assignments.map((a) => [a.content_piece_id, a]));
@@ -128,6 +145,7 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       approvedRevision: p.approved_revision,
       timing: { mode: p.timing_mode, fixedDate: p.fixed_date, validFrom: p.valid_from, validUntil: p.valid_until },
       assignedWeek: assignmentMap.get(p.id)?.week_start ?? null,
+      plannedDate: assignmentMap.get(p.id)?.planned_date ?? null,
       publications: (pubsByPiece.get(p.id) ?? []).map((pub) => ({
         id: pub.id,
         channelId: pub.channel_id,
@@ -169,6 +187,9 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
     references,
     observations,
     templates,
+    formats,
+    modes,
+    axes,
     facts,
     accountFacts: accounts.map((a) => ({
       id: a.id,
@@ -178,6 +199,16 @@ export async function loadSnapshot(supabase: SupabaseClient, now = new Date()): 
       coverageMode: a.coverage_mode,
     })),
   };
+}
+
+/** Datos de V0.2: si la migración 0008 aún no se aplicó, la app sigue sin ellos. */
+async function optional<T>(query: PromiseLike<{ data: T[] | null; error: { message: string } | null }>, label: string): Promise<T[]> {
+  const { data, error } = await query;
+  if (error) {
+    console.warn(`No disponible (${label}): ${error.message}`);
+    return [];
+  }
+  return data ?? [];
 }
 
 /** Las plantillas son opcionales: si su migración aún no se aplicó, la app sigue sin ellas. */

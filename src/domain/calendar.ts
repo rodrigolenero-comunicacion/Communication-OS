@@ -1,6 +1,6 @@
 // Calendario mensual (lunes–domingo) y estado visible de una pieza en su tarjeta.
 // Puro: recibe fechas locales y hechos; no lee el reloj.
-import { addDays, isLocalDate, weekStartOf, type LocalDate } from "./time.ts";
+import { addDays, isLocalDate, localDateOf, weekStartOf, type LocalDate } from "./time.ts";
 import type { PieceFact } from "./types.ts";
 
 /** Mes como "YYYY-MM". */
@@ -89,4 +89,25 @@ export function cardStatus(piece: Pick<PieceFact, "ownership" | "productionStatu
   else if (piece.onHold) key = "held";
   else key = piece.productionStatus ?? "idea";
   return { key, ...CARD_STATUS[key] };
+}
+
+/**
+ * Día en que la pieza aparece en el calendario: día planeado; si no hay, el de su
+ * primera publicación confirmada o, en su defecto, programada. Null = sin fecha (Content Bank).
+ */
+export function calendarDateOf(piece: Pick<PieceFact, "plannedDate" | "publications">): LocalDate | null {
+  if (piece.plannedDate) return piece.plannedDate;
+  const first = (status: "published" | "scheduled") =>
+    piece.publications
+      .filter((p) => p.status === status)
+      .map((p) => (status === "published" ? p.publishedAt : p.scheduledAt))
+      .filter((d): d is Date => d !== null)
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+  const instant = first("published") ?? first("scheduled");
+  return instant ? localDateOf(instant) : null;
+}
+
+/** ¿Se puede arrastrar? D1: no con publicación programada o confirmada, ni archivada. */
+export function canMoveByDrag(piece: Pick<PieceFact, "archived" | "publications">): boolean {
+  return !piece.archived && !piece.publications.some((p) => p.status === "scheduled" || p.status === "published");
 }

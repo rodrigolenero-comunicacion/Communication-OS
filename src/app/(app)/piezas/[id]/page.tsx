@@ -5,6 +5,8 @@ import { CommandForm } from "@/components/CommandForm";
 import { CATEGORY_LABEL } from "@/components/NewPieceFields";
 import { PacketView } from "@/components/PacketView";
 import { PublicationPanel } from "@/components/PublicationPanel";
+import { MoveDateControl } from "@/components/calendar/MoveDateControl";
+import { calendarDateOf, canMoveByDrag } from "@/domain/calendar";
 import { TimingFields } from "@/components/TimingFields";
 import {
   BUCKET_LABEL,
@@ -18,8 +20,7 @@ import {
   localTimeInput,
 } from "@/components/format";
 import { Badge, Card, Details, Empty, Field, PageHeader, SafeLink, Section } from "@/components/ui";
-import { hasCurrentApproval, weekFitsTiming } from "@/domain/pieces";
-import { horizonWeeks } from "@/domain/planning";
+import { hasCurrentApproval } from "@/domain/pieces";
 import type { ProductionStatus } from "@/domain/types";
 
 const EDITABLE: ProductionStatus[] = ["idea", "planned", "in_production", "changes_requested"];
@@ -65,8 +66,15 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
     : piece.production_status === "approved" ? "Aprobada: reábrela para editar su contenido (invalida la aprobación)."
     : piece.production_status === "in_review" ? "En revisión: pide cambios desde Review Desk para editar." : null;
   const v = piece.version;
+  const calendarDate = calendarDateOf(fact);
+  const brandAxes = snapshot.axes.filter((x) => x.brand_id === brand.id && x.active);
+  const axisName = (axisId: string | null | undefined) => {
+    const x = axisId ? snapshot.axes.find((a) => a.id === axisId) : undefined;
+    return x ? `${x.code ? `${x.code} · ` : ""}${x.name}${x.provisional ? " (provisional)" : ""}` : null;
+  };
+  const formatLabel = snapshot.formats.find((f) => f.key === piece.format_key)?.label ?? null;
+  const modeLabel = snapshot.modes.find((m) => m.key === piece.production_mode_key)?.label ?? null;
   const template = piece.template_id ? snapshot.templates.find((t) => t.id === piece.template_id) ?? null : null;
-  const assignableWeeks = horizonWeeks(snapshot.now).filter((w) => weekFitsTiming(fact.timing, w) && w !== fact.assignedWeek);
   const scheduled = pubs.filter((p) => p.status === "scheduled");
 
   return (
@@ -127,39 +135,65 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
             </Section>
           )}
 
-          <Section title="Planeación semanal">
+          <Section title="Fecha en el calendario">
             <p className="text-sm">
-              {fact.assignedWeek ? (
+              {calendarDate ? (
                 <>
-                  Asignada a la semana del <strong>{fmtWeek(fact.assignedWeek)}</strong>;{" "}
+                  <Link href={`/dia/${calendarDate}`} className="font-medium underline">{fmtDate(calendarDate)}</Link>
+                  {" · "}
                   {published ? "con publicación confirmada." : scheduled.length > 0 ? `${scheduled.length} destino(s) programado(s).` : "aún sin programar."}
                 </>
+              ) : fact.assignedWeek ? (
+                <>Semana del <strong>{fmtWeek(fact.assignedWeek)}</strong>, sin día elegido.</>
               ) : (
-                <>Sin semana asignada: no cubre ninguna semana{hasCurrentApproval(fact) && piece.timing_mode === "flexible" ? " (está en reserva)" : ""}.</>
+                <>Sin fecha: está en el Content Bank{hasCurrentApproval(fact) && piece.timing_mode === "flexible" ? " (y en reserva)" : ""}.</>
               )}
             </p>
-            {!piece.archived_at && !published && (
-              <div className="mt-2 flex flex-wrap gap-3">
-                {assignableWeeks.length > 0 && scheduled.length === 0 && (
-                  <CommandForm command="assign_week" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel={fact.assignedWeek ? "Reasignar" : "Asignar"} inline tone="secondary">
-                    <select name="week_start" className="input w-auto" aria-label="Semana" required defaultValue="">
-                      <option value="" disabled>{fact.assignedWeek ? "Elegir otra semana…" : "Elegir semana…"}</option>
-                      {assignableWeeks.map((w) => <option key={w} value={w}>{fmtWeek(w)}</option>)}
-                    </select>
-                  </CommandForm>
-                )}
-                {fact.assignedWeek && scheduled.length === 0 && (
-                  <CommandForm command="unassign_week" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel="Quitar asignación" inline tone="secondary" />
+            {!piece.archived_at && (
+              <div className="mt-2 flex flex-wrap items-start gap-4">
+                <MoveDateControl pieceId={id} version={v} currentDate={calendarDate} movable={canMoveByDrag(fact)} />
+                {fact.assignedWeek && scheduled.length === 0 && !published && (
+                  <CommandForm command="unassign_week" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel="Quitar del calendario" inline tone="secondary" />
                 )}
               </div>
             )}
-            {scheduled.length > 0 && <p className="mt-2 text-xs text-muted">Para cambiar de semana, cancela o confirma primero los destinos programados.</p>}
           </Section>
 
           <Section title="Datos editoriales" description={editBlockReason ?? "Los cambios de contenido incrementan la revisión."}>
             {editable && (
             <CommandForm command="update_piece" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel="Guardar datos">
               <Field label="Título"><input name="title" defaultValue={piece.title} required className="input" /></Field>
+              <Field label="Idea"><textarea name="idea" defaultValue={piece.idea ?? ""} rows={3} className="input" /></Field>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Formato">
+                  <select name="format_key" defaultValue={piece.format_key ?? ""} className="input">
+                    <option value="">—</option>
+                    {snapshot.formats.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+                  </select>
+                </Field>
+                <Field label="Modo de producción">
+                  <select name="production_mode_key" defaultValue={piece.production_mode_key ?? ""} className="input">
+                    <option value="">—</option>
+                    {snapshot.modes.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+                  </select>
+                </Field>
+                {brandAxes.some((x) => x.kind === "pillar") && (
+                  <Field label="Pilar">
+                    <select name="pillar_id" defaultValue={piece.pillar_id ?? ""} className="input">
+                      <option value="">—</option>
+                      {brandAxes.filter((x) => x.kind === "pillar").map((x) => <option key={x.id} value={x.id}>{x.code ? `${x.code} · ` : ""}{x.name}{x.provisional ? " (provisional)" : ""}</option>)}
+                    </select>
+                  </Field>
+                )}
+                {brandAxes.some((x) => x.kind === "territory") && (
+                  <Field label="Territorio">
+                    <select name="territory_id" defaultValue={piece.territory_id ?? ""} className="input">
+                      <option value="">—</option>
+                      {brandAxes.filter((x) => x.kind === "territory").map((x) => <option key={x.id} value={x.id}>{x.name}{x.provisional ? " (provisional)" : ""}</option>)}
+                    </select>
+                  </Field>
+                )}
+              </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Objetivo"><textarea name="objective" defaultValue={piece.objective ?? ""} rows={2} className="input" /></Field>
                 <Field label="Audiencia"><textarea name="audience" defaultValue={piece.audience ?? ""} rows={2} className="input" /></Field>
@@ -174,7 +208,8 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
             )}
             {!editable && (
               <dl className="grid gap-2 text-sm md:grid-cols-2">
-                {[["Objetivo", piece.objective], ["Audiencia", piece.audience], ["Tipo", piece.content_type], ["Rol editorial", piece.editorial_role], ["Campaña", piece.campaign]].map(([k, val]) => (
+                {[["Idea", piece.idea], ["Formato", formatLabel], ["Modo de producción", modeLabel], ["Pilar", axisName(piece.pillar_id)], ["Territorio", axisName(piece.territory_id)],
+                  ["Objetivo", piece.objective], ["Audiencia", piece.audience], ["Tipo", piece.content_type], ["Rol editorial", piece.editorial_role], ["Campaña", piece.campaign]].map(([k, val]) => (
                   <div key={k}><dt className="text-xs text-muted">{k}</dt><dd className="whitespace-pre-wrap">{val || "—"}</dd></div>
                 ))}
                 <div><dt className="text-xs text-muted">Production Spec</dt><dd><SafeLink href={piece.production_spec_url}>{piece.production_spec_url ? "Abrir spec" : "—"}</SafeLink></dd></div>
