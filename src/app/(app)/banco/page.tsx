@@ -68,11 +68,17 @@ export default async function ContentBankPage({ searchParams }: { searchParams: 
           </Link>
         ))}
       </nav>
+      {undated.length === 0 && (
+        <p role="status" className="mb-5 rounded-md border border-line bg-paper p-3 text-sm">
+          Nada sin fecha{origin ? " con este filtro" : ""}. Tus piezas con fecha están en el{" "}
+          <Link href="/" className="underline">calendario</Link>. Para traer una aquí, ábrela y usa «Quitar del calendario».
+        </p>
+      )}
       {GROUPS.map((g) => {
         const list = undated.filter((c) => groupOf(c) === g.key);
         return (
           <Section key={g.key} id={g.key} title={`${g.title} (${list.length})`} description={g.description}>
-            {list.length === 0 ? <Empty>Nada por aquí.</Empty> : <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{list.map(item)}</ul>}
+            {list.length === 0 ? <Empty>Nada sin fecha en este grupo.</Empty> : <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{list.map(item)}</ul>}
           </Section>
         );
       })}
