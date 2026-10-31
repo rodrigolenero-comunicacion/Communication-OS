@@ -24,6 +24,12 @@ export interface Proposal extends ConceptOut {
 }
 
 const MAX_TOKENS = { classify: 2500, develop: 4000, ideas: 6000, package: 12000 } as const;
+/**
+ * Esfuerzo explícito en ambas etapas. En Claude Sonnet 5.5 el valor por defecto de la API es `high` y el
+ * thinking adaptativo está siempre activo; `medium` reduce latencia frente al límite síncrono de 60 s de
+ * Netlify manteniendo calidad editorial. Ajustar solo tras medir en uso real.
+ */
+export const GENERATION_EFFORT = "medium" as const;
 
 function failureStatus(code: GenerationFailure): RunRecord["status"] {
   return code === "not_configured" ? "not_configured" : code === "refused" ? "refused" : "failed";
@@ -36,7 +42,7 @@ export async function generateProposals(
   const built = buildContext({ ...input, stage: mode });
   const prompt = proposalPrompt(mode, built.context);
   const hash = await inputHash(SYSTEM_PROMPT + prompt);
-  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: proposalsSchema(built.options), maxTokens: MAX_TOKENS[mode], effort: "low" });
+  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: proposalsSchema(built.options), maxTokens: MAX_TOKENS[mode], effort: GENERATION_EFFORT });
   const base = { stage: mode, provider: generator.provider, inputHash: hash } as const;
   if (!res.ok) {
     await record({ ...base, model: res.model, status: failureStatus(res.code), errorCode: res.code, inputTokens: res.inputTokens ?? null, outputTokens: res.outputTokens ?? null });
@@ -72,7 +78,7 @@ export async function generatePackage(
   const built = buildContext({ ...input, stage: "package" });
   const prompt = packagePrompt(built.context);
   const hash = await inputHash(SYSTEM_PROMPT + prompt);
-  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: packageSchema(built.options), maxTokens: MAX_TOKENS.package, effort: "medium" });
+  const res = await generator.generate({ system: SYSTEM_PROMPT, prompt, schema: packageSchema(built.options), maxTokens: MAX_TOKENS.package, effort: GENERATION_EFFORT });
   const base = { stage: "package", provider: generator.provider, inputHash: hash } as const;
   if (!res.ok) {
     await record({ ...base, model: res.model, status: failureStatus(res.code), errorCode: res.code, inputTokens: res.inputTokens ?? null, outputTokens: res.outputTokens ?? null });

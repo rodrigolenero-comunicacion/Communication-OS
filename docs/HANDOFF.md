@@ -194,6 +194,8 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 3. Comprobación: `select b.slug, b.capabilities, (select count(*) from public.idea_library l where l.brand_id = b.id) as ideas from public.brands b order by 1;` → esperado ijlv `{editorial_generation}` 62; tec y solotu `{}` 0.
 4. Netlify → Site configuration → Environment variables: `ANTHROPIC_API_KEY` (de console.anthropic.com → API keys; ámbito: funciones/servidor). Opcionales: `GENERATION_MODEL`, `GENERATION_TIMEOUT_MS`. Volver a desplegar para que la tome.
 
+**Revisión del adaptador (2026-10-31, antes de activar):** el límite de 16 campos con unión de tipos está documentado literalmente en la página oficial de Structured Outputs («Schema complexity limits» → «Explicit limits»); se conserva el modelado con cadena vacía y se acota la conversión a null a los opcionales declarados. Esfuerzo `medium` explícito en ambas etapas, thinking adaptativo explícito, `maxRetries: 0` (antes 1: con timeout de 55 s un reintento podía rebasar los 60 s de Netlify). Pruebas: dominio 70/70, PostgreSQL 384, typecheck y build OK. Sin llamadas reales.
+
 ## Siguiente unidad (vigente)
 
 1. Rodrigo: aplicar 0012 y 0013, configurar la clave y recorrer los criterios 1–27 de la instrucción V0.4 + regresión (calendario, Day Studio, orígenes Tec, Content Bank, Brain, Fuentes, ficha, Review, Publication Queue, Operación).

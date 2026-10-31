@@ -13,10 +13,25 @@ export type JsonSchema =
 
 const str = (description?: string): JsonSchema => ({ type: "string", ...(description ? { description } : {}) });
 const nullable = (s: JsonSchema): JsonSchema => ({ anyOf: [s, { type: "null" }] });
-/** Texto opcional SIN unión de tipos: cadena vacía = no aplica (la API limita las uniones a 16 por petición). */
-const opt = (description?: string): JsonSchema => str(description ? `${description}. Cadena vacía si no aplica` : "Cadena vacía si no aplica");
-/** Límite de la API: campos con anyOf/nullable por petición. Una prueba lo vigila. */
+/**
+ * Límite documentado por Anthropic para `output_config.format` / `strict: true`:
+ * https://platform.claude.com/docs/en/build-with-claude/structured-outputs — «Schema complexity limits» →
+ * «Explicit limits»: «Parameters with union types | 16 | Total parameters that use `anyOf` or type arrays
+ * (for example, `"type": ["string", "null"]`) across all strict schemas.» (consultado el 2026-10-31).
+ * Por eso los textos opcionales del paquete van como cadena vacía y se convierten a null al validar;
+ * `null` se reserva para objetos opcionales (guía de captura, audio). Una prueba vigila el límite.
+ */
 export const MAX_UNION_FIELDS = 16;
+/** Textos opcionales: el proveedor usa "" para «no aplica»; tras validar se guardan como null. */
+export const OPTIONAL_TEXT: ReadonlySet<string> = new Set([
+  "stage", "similar_to", "hook", "development", "closing", "voiceover", "creative_brief", "bars", "camera", "transition",
+  "sound", "source_credit", "cta", "alt_text", "fallback", "output", "source_ref", "on_screen_credit", "alternative",
+]);
+/** Texto opcional sin unión de tipos (ver MAX_UNION_FIELDS). La clave debe estar en OPTIONAL_TEXT. */
+const opt = (key: string, description?: string): JsonSchema => {
+  if (!OPTIONAL_TEXT.has(key)) throw new Error(`Campo opcional no declarado: ${key}`);
+  return str(description ? `${description}. Cadena vacía si no aplica` : "Cadena vacía si no aplica");
+};
 const list = (items: JsonSchema, description?: string): JsonSchema => ({ type: "array", items, ...(description ? { description } : {}) });
 const obj = (properties: Record<string, JsonSchema>, description?: string): JsonSchema => ({
   type: "object", properties, required: Object.keys(properties), additionalProperties: false, ...(description ? { description } : {}),
@@ -49,7 +64,7 @@ export function conceptSchema(o: SchemaOptions): JsonSchema {
     suggested_production_mode: oneOf(o.modeKeys),
     central_message: str("Mensaje que debe quedar"),
     editorial_reason: str("Por qué encaja con la estrategia; breve"),
-    similar_to: opt("Pieza reciente o idea del banco parecida y en qué"),
+    similar_to: opt("similar_to", "Pieza reciente o idea del banco parecida y en qué"),
   });
 }
 
@@ -61,21 +76,21 @@ export function packageSchema(o: SchemaOptions): JsonSchema {
   const sourceRef = oneOf([...o.sourceRefs, ""], "ref de una fuente del contexto que respalde la afirmación; cadena vacía si ninguna");
   return obj({
     concept: str(), central_message: str(), objective: str(),
-    hook: opt(), development: opt(), closing: opt(),
+    hook: opt("hook"), development: opt("development"), closing: opt("closing"),
     screen_text: list(str(), "Textos exactos en pantalla, en orden"),
-    voiceover: opt(),
+    voiceover: opt("voiceover"),
     teacher_lines: list(str(), "Como máximo dos líneas exactas de docente si se usan"),
     interaction_prompts: list(str(), "Preguntas detonadoras abiertas; nunca respuestas guionizadas de niños"),
     capture_guide: nullable(obj({
       moments: list(str()), direction: str(), broll: list(str()), privacy: str(), materials: list(str()),
     })),
     edit_structure: list(str(), "Estructura de edición por bloques"),
-    creative_brief: opt(),
+    creative_brief: opt("creative_brief"),
     storyboard: list(obj({
-      scene: { type: "integer" }, timing: str(), bars: opt("Compases"), text: str("Texto exacto"),
-      layout: str(), movement: str(), camera: opt(), transition: opt(), sound: opt(),
+      scene: { type: "integer" }, timing: str(), bars: opt("bars", "Compases"), text: str("Texto exacto"),
+      layout: str(), movement: str(), camera: opt("camera"), transition: opt("transition"), sound: opt("sound"),
     })),
-    carousel_slides: list(obj({ title: str(), body: str(), visual_direction: str(), source_credit: opt() })),
+    carousel_slides: list(obj({ title: str(), body: str(), visual_direction: str(), source_credit: opt("source_credit") })),
     graphics_spec: list(obj({
       element: str(), function: str(), moment: str(), movement: str(), relation_to_image: str(), constraint: str(),
     })),
@@ -83,17 +98,17 @@ export function packageSchema(o: SchemaOptions): JsonSchema {
       intention: str(), rhythm: str(), key_moments: list(str()), timbres: list(str()), jingle_relation: str(),
       sfx: list(str()), level: str(),
     })),
-    caption: str(), cta: opt(), alt_text: opt(),
-    fallback: opt("Plan B / versión estática"),
-    output: opt("Entregables"),
+    caption: str(), cta: opt("cta"), alt_text: opt("alt_text"),
+    fallback: opt("fallback", "Plan B / versión estática"),
+    output: opt("output", "Entregables"),
     claims: list(obj({
       statement: str("Afirmación exacta que aparece en la pieza"),
       evidence_class: oneOf(EVIDENCE_CLASSES),
       source_ref: sourceRef,
-      on_screen_credit: opt(),
+      on_screen_credit: opt("on_screen_credit"),
     })),
     dependencies: list(str(), "Condiciones necesarias antes de aprobar (autorizaciones, material, validaciones)"),
-    alternative: opt(),
+    alternative: opt("alternative"),
   });
 }
 
@@ -161,13 +176,18 @@ export const PROPOSAL_COUNT: Record<ProposalMode, { min: number; max: number }> 
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
-/** Cadena vacía → null en campos de texto y sin vacíos en listas de texto (tras validar). */
+/**
+ * Tras validar: "" → null SOLO en los textos opcionales declarados con `opt` (y etapa / fuente), y sin
+ * entradas vacías en listas de texto. Los textos obligatorios conservan su valor (las reglas semánticas
+ * deciden si un vacío es aceptable). Es el único punto donde "" significa «sin valor».
+ */
 export function emptyToNull<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.filter((v) => !(typeof v === "string" && v.trim() === "")).map((v) => emptyToNull(v)) as T;
   }
   if (value && typeof value === "object") {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, typeof v === "string" && v.trim() === "" ? null : emptyToNull(v)])) as T;
+    return Object.fromEntries(Object.entries(value).map(([k, v]) =>
+      [k, typeof v === "string" ? (OPTIONAL_TEXT.has(k) && v.trim() === "" ? null : v) : emptyToNull(v)])) as T;
   }
   return value;
 }

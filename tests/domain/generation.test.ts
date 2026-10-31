@@ -245,3 +245,49 @@ test("seguridad: correos y teléfonos no salen al proveedor; fechas e ids intact
   assert.equal(out, "Escribir a [correo omitido] o al [teléfono omitido] / [teléfono omitido] el 2026-11-10");
   assert.equal(redactPersonalData("11111111-1111-4111-8111-111111111111"), "11111111-1111-4111-8111-111111111111");
 });
+
+test("parseo estructurado: opcionales vacíos → null, ausentes inválidos, null solo en objetos opcionales", async () => {
+  const { OPTIONAL_TEXT, conceptSchema } = await import("../../src/domain/generation/schema.ts");
+  // Ausente: todos los campos son required (sin opcionales que cuenten al límite de 24).
+  const { hook: _h, ...withoutHook } = samplePackage();
+  assert.equal(checkPackage(withoutHook, opts).ok, false, "campo opcional ausente → inválido");
+  // null en un texto opcional no está en el esquema (va como "").
+  assert.equal(checkPackage(samplePackage({ hook: null }), opts).ok, false, "null en texto opcional → inválido");
+  // null en objetos opcionales sí es válido.
+  const objs = checkPackage(samplePackage({ capture_guide: null, audio_spec: null }), opts);
+  assert.ok(objs.ok && objs.value.capture_guide === null && objs.value.audio_spec === null);
+  // "" en opcionales → null; obligatorios conservan su texto; fuente vacía → null.
+  const p = checkPackage(samplePackage({
+    cta: "", storyboard: [{ scene: 1, timing: "0–2 s", bars: "", text: "", layout: "l", movement: "m", camera: "", transition: "", sound: "" }],
+    claims: [{ statement: "Prueben esta pregunta", evidence_class: "creative_metaphor", source_ref: "", on_screen_credit: "" }],
+  }), opts);
+  assert.ok(p.ok);
+  if (!p.ok) return;
+  assert.equal(p.value.cta, null);
+  assert.deepEqual(p.value.storyboard[0], { scene: 1, timing: "0–2 s", bars: null, text: "", layout: "l", movement: "m", camera: null, transition: null, sound: null },
+    "texto obligatorio vacío NO se convierte en null");
+  assert.equal(p.value.claims[0].source_ref, null);
+  assert.equal(p.value.claims[0].on_screen_credit, null);
+  const c = checkProposals({ proposals: [concept(1, { stage: "", similar_to: "" })] }, "classify", opts);
+  assert.ok(c.ok && c.value[0].stage === null && c.value[0].similar_to === null);
+
+  // Coherencia: todo campo descrito como «Cadena vacía si no aplica» (o enum con "") está en OPTIONAL_TEXT, y viceversa.
+  const found = new Set<string>();
+  const walk = (s: unknown, key?: string) => {
+    if (!s || typeof s !== "object") return;
+    const o = s as Record<string, unknown>;
+    if (key && o.type === "string" && ((o.description as string | undefined)?.includes("Cadena vacía si no aplica") || (o.enum as string[] | undefined)?.includes(""))) found.add(key);
+    if (o.properties) for (const [k, v] of Object.entries(o.properties as object)) walk(v, k);
+    if (o.items) walk(o.items);
+    if (o.anyOf) for (const v of o.anyOf as unknown[]) walk(v, key);
+  };
+  walk(packageSchema(opts)); walk(conceptSchema(opts));
+  assert.deepEqual([...found].sort(), [...OPTIONAL_TEXT].sort());
+});
+
+test("latencia: esfuerzo explícito «medium» en Stage A y Stage B", async () => {
+  const g = fake([{ proposals: [concept(1)] }, samplePackage()]);
+  await generateProposals("classify", input(), g, async () => {});
+  await generatePackage(input({ format: "carousel", mode: "fully_graphic", concept: {} }), [], g, async () => {});
+  assert.deepEqual(g.calls.map((c) => c.effort), ["medium", "medium"]);
+});

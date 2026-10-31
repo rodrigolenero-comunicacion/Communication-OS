@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { StructuredGenerator, StructuredRequest, StructuredResult } from "@/domain/generation/provider";
 
 const DEFAULT_MODEL = "claude-sonnet-5-5";
+// Netlify Functions estándar cortan a los 60 s: el tiempo total de la llamada debe quedar por debajo.
 const DEFAULT_TIMEOUT_MS = 55_000;
 
 export function anthropicGenerator(env: Record<string, string | undefined> = process.env): StructuredGenerator {
@@ -14,7 +15,9 @@ export function anthropicGenerator(env: Record<string, string | undefined> = pro
   if (!apiKey) {
     return { provider: "anthropic", configured: false, generate: async () => ({ ok: false, code: "not_configured", model: null }) };
   }
-  const client = new Anthropic({ apiKey, timeout, maxRetries: 1 });
+  // Sin reintentos automáticos: un reintento tras un timeout duplicaría el tiempo y rebasaría el límite de
+  // Netlify. Si falla, la UI ofrece reintentar y no se guarda nada.
+  const client = new Anthropic({ apiKey, timeout, maxRetries: 0 });
 
   return {
     provider: "anthropic",
@@ -26,6 +29,8 @@ export function anthropicGenerator(env: Record<string, string | undefined> = pro
           max_tokens: req.maxTokens,
           system: req.system,
           messages: [{ role: "user", content: req.prompt }],
+          // Sonnet 5.5: thinking adaptativo (no se puede desactivar con `disabled`); profundidad vía effort.
+          thinking: { type: "adaptive" },
           output_config: { effort: req.effort, format: { type: "json_schema", schema: req.schema as Record<string, unknown> } },
           // Si el modelo declina por categoría, el servidor reintenta con el modelo recomendado.
           betas: ["server-side-fallback-2026-07-01"],
