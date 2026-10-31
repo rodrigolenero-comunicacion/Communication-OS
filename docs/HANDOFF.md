@@ -10,7 +10,7 @@ Fecha: 2026-10-27. Estado: **parcialmente implementado — listo para conectar S
 | Migración `20261031000008_calendar_first.sql` | **Aplicada** |
 | V0.2 Calendar-First | **Activa** y en uso |
 | Migración `20261031000009_content_origins.sql` | **Aplicada** por el propietario |
-| V0.2.1 Orígenes de contenido | **Activa**; alta de Cobertura/evento verificada por el propietario tras la corrección `6d406d4`. Resto del recorrido de aceptación pendiente de confirmar |
+| V0.2.1 Orígenes de contenido | **Cerrada y verificada** por el propietario con sesión real (2026-10-31): selector por cliente, orgánico intacto, evento pendiente/disponible, material existente con enlace, señales en tarjetas (pendiente, disponible, copy), edición de «Origen y material», mover de día, Content Bank y filtros, IJLV/Solotu solo orgánico, móvil básico. Correcciones durante el smoke: `6d406d4` (modo de producción) y `c5c4f4d` (texto del Content Bank vacío, opción B) |
 
 **Corrección V0.2.1 (smoke real, 2026-10-31):** «Elige una opción: production_mode_key» al guardar Cobertura/evento. Causa raíz: el registro de comandos de la app (`src/application/commands.ts`) exigía el modo para todos los orígenes; la función SQL de la 0009 ya lo condicionaba al origen. Corregido solo en la app; **sin migración nueva** (0009 sin cambios). Pruebas: `tests/domain/commands.test.ts` (reproduce el fallo) y `tests/db/12_command_roundtrip.mjs` (formulario → SQL real).
 
@@ -161,9 +161,10 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 
 ## Siguiente unidad (vigente)
 
-1. Propietario: aplicar `20261031000009_content_origins.sql`.
-2. Propietario: recorrido de aceptación V0.2.1 (orígenes en Tec, orgánico intacto, evento pendiente/disponible, material existente con enlace, señales en tarjetas, sección «Origen y material», edición, mover de día, Content Bank y filtros, IJLV/Solotu solo orgánico, móvil básico).
-3. Ejecutor: corregir solo los hallazgos que reporte el propietario; sin implementación adicional mientras tanto.
+Sin trabajo abierto. Pendientes conocidos, sin implementar hasta indicación del propietario:
+- Objetivo de prueba 5/semana de Solotu.IA sigue activo (retirarlo en Clientes si no es real).
+- Texto de Operación menciona «V0.1» en el aviso de Stories (cosmético).
+- IJLV Sistema Editorial v1.4 no recibido; ejes Tec provisionales sin validar.
 
 ## Siguiente unidad (histórico de sesión 1)
 
