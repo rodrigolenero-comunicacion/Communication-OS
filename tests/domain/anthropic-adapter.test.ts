@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import Anthropic from "@anthropic-ai/sdk";
 import { anthropicGenerator, classifyProviderError, sanitizeProviderMessage } from "../../src/infrastructure/llm/anthropic.ts";
 
-const KEY = "sk-ant-api03-SECRETOdePRUEBA123456789";
+// Secreto genérico de prueba: sin forma de credencial real (los escáneres de secretos lo bloquearían).
+const KEY = "TEST_SECRET_VALUE_123456789";
+// Valor con forma de clave Anthropic construido en tiempo de ejecución: el repo no contiene el patrón completo.
+const anthropicLike = () => ["sk", "ant", "api03", "TESTVALUE"].join("-");
 const REQ = { system: "SYSTEM-CONFIDENCIAL", prompt: "PROMPT-CON-CONTEXTO-DEL-BRAIN", schema: { type: "null" } as const, maxTokens: 10, effort: "medium" as const, stage: "develop" };
 const body = (type: string, message: string) => ({ type: "error", error: { type, message } });
 const headers = (id = "req_011CTest") => new Headers({ "request-id": id, "x-api-key": KEY });
@@ -29,9 +32,9 @@ test("adaptador: sin ANTHROPIC_API_KEY degrada a «no configurado» sin llamar a
 });
 
 test("adaptador: con clave queda configurado (la clave no se expone)", () => {
-  const g = anthropicGenerator({ ANTHROPIC_API_KEY: "sk-test-no-real" });
+  const g = anthropicGenerator({ ANTHROPIC_API_KEY: "TEST_SECRET_VALUE_CONFIGURED" });
   assert.equal(g.configured, true);
-  assert.ok(!JSON.stringify(g).includes("sk-test"));
+  assert.ok(!JSON.stringify(g).includes("TEST_SECRET_VALUE"));
 });
 
 const CASES: [string, unknown, string, number | null][] = [
@@ -81,7 +84,7 @@ test("log: nunca incluye clave, headers, prompt, system ni cuerpo de la petició
   const { g, lines, sent } = failing(leaky);
   await g.generate(REQ);
   const line = lines.join("\n");
-  for (const forbidden of [KEY, "SECRETOdePRUEBA", "SYSTEM-CONFIDENCIAL", "PROMPT-CON-CONTEXTO-DEL-BRAIN", "x-api-key", "\n"]) {
+  for (const forbidden of [KEY, "TEST_SECRET_VALUE", "SYSTEM-CONFIDENCIAL", "PROMPT-CON-CONTEXTO-DEL-BRAIN", "x-api-key", "\n"]) {
     assert.ok(!line.includes(forbidden), `no debe aparecer: ${forbidden}`);
   }
   // La petición enviada no cambia (mismos campos) y no lleva la etapa.
@@ -94,6 +97,7 @@ test("log: nunca incluye clave, headers, prompt, system ni cuerpo de la petició
 
 test("sanitizado: acota longitud y redacta credenciales", () => {
   assert.equal(sanitizeProviderMessage(`x ${"a".repeat(400)}`).length, 300);
-  assert.equal(sanitizeProviderMessage("token sk-ant-abc_DEF-123 fin"), "token [redacted] fin");
+  assert.equal(sanitizeProviderMessage(`token ${anthropicLike()} fin`), "token [redacted] fin", "patrón de clave Anthropic");
+  assert.equal(sanitizeProviderMessage(`token ${KEY} fin`, [KEY]), "token [redacted] fin", "credencial exacta suministrada, sin prefijo");
   assert.equal(sanitizeProviderMessage(undefined), "");
 });
