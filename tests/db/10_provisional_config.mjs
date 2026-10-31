@@ -32,7 +32,8 @@ const pieces = psql(db, ["-c", "select count(*) from public.content_pieces"]);
 ok(pieces === "0", "La migración no crea contenido");
 
 // V0.3: carga inicial del Client Brain sobre la misma base (como en producción).
-for (const m of migrations.slice(brainIndex)) psql(db, ["-f", join(root, "supabase/migrations", m)]);
+const generatorIndex = migrations.findIndex((m) => m.includes("_editorial_generator"));
+for (const m of migrations.slice(brainIndex, generatorIndex)) psql(db, ["-f", join(root, "supabase/migrations", m)]);
 const q = (sql) => psql(db, ["-c", sql]);
 const brand = (slug) => `(select id from public.brands where slug = '${slug}')`;
 ok(q(`select count(*) from public.brain_entries where brand_id = ${brand("otra")}`) === "0" &&
@@ -57,4 +58,28 @@ const leak = q(`select count(*) from public.brain_entries e join public.source_r
 const sharedTitles = q(`select count(*) from public.brain_entries a join public.brain_entries b on a.title = b.title and a.brand_id <> b.brand_id`);
 ok(leak === "0" && sharedTitles === "0", "Sin contaminación entre clientes (fuentes ni reglas compartidas)");
 ok(q(`select count(*) from public.content_pieces`) === "0", "La carga del Brain no crea contenido");
+
+// V0.4: generador editorial y carga del piloto IJLV.
+for (const m of migrations.slice(generatorIndex)) psql(db, ["-f", join(root, "supabase/migrations", m)]);
+ok(q(`select string_agg(slug || '=' || array_to_string(capabilities, '+'), ',' order by slug) from public.brands`) === "ijlv=editorial_generation,otra=,solotu=,tec=",
+   "Solo IJLV tiene generación habilitada");
+ok(q(`select count(*) || ':' || min(code) || ':' || max(code) || ':' || count(distinct code) from public.idea_library where brand_id = ${brand("ijlv")}`) === "62:01:62:62",
+   "Biblioteca IJLV: 62 ideas con sus IDs 01–62");
+ok(q(`select count(*) from public.idea_library where pillar_id is null or territory_id is null or source_reference_id is null`) === "0",
+   "Cada idea tiene pilar, territorio y fuente");
+ok(q(`select string_agg(p.code || '=' || n, ',' order by p.code) from (select pillar_id, count(*) n from public.idea_library group by 1) x join public.brand_axes p on p.id = x.pillar_id`) === "P1=15,P2=16,P3=16,P4=15",
+   "Ideas por pilar según el documento (incluidas 61 y 62)");
+ok(q(`select l.title || '|' || t.name || '|' || coalesce(l.format_key, '-') || '|' || l.requirement_kind || '|' || l.cta from public.idea_library l join public.brand_axes t on t.id = l.territory_id where l.code = '36'`) ===
+   "Una pregunta antes de explicar|Pensamiento|motion|V|Prueben observar juntos", "Idea 36 fiel al documento");
+ok(q(`select count(*) from public.idea_library where stage is not null`) === "0", "Etapa no inventada: el banco no la indica por idea");
+ok(q(`select count(*) from public.idea_library i join public.source_references s on s.id = i.source_reference_id where s.document_version = '1.4'`) === "62",
+   "Biblioteca atribuida a la fuente v1.4");
+ok(q(`select count(*) from public.brand_axes where brand_id = ${brand("ijlv")} and description is null`) === "0", "Pilares y territorios IJLV con descripción");
+ok(q(`select count(*) from public.brain_entries where brand_id = ${brand("ijlv")} and category = 'production_rule' and applies_to = '{}'`) === "2",
+   "Reglas de producción con su ámbito (solo 2 universales)");
+ok(q(`select count(*) from public.source_references where brand_id = ${brand("ijlv")} and institution = 'UNICEF' and accessed_at is null`) === "2",
+   "Fuentes UNICEF citadas por el documento, sin fecha de consulta inventada");
+ok(q(`select count(*) from public.brain_entries e join public.source_references s on s.id = e.source_reference_id where s.brand_id <> e.brand_id`) === "0" &&
+   q(`select count(*) from public.idea_library l join public.brands b on b.id = l.brand_id where b.slug <> 'ijlv'`) === "0", "V0.4 sin contaminación entre clientes");
+ok(q(`select count(*) from public.content_pieces`) === "0", "La carga V0.4 no crea contenido");
 psql("postgres", ["-c", `drop database if exists ${db} with (force)`]);
