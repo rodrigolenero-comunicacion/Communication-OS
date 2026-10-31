@@ -1,6 +1,18 @@
 # System Canon
 
-Estado: contrato inicial de construcción, versión documental 0.1, 2026-10-27.
+Estado: contrato de V0.1 (2026-10-27), con cambio de dirección registrado el 2026-10-31.
+
+## Estado actual vs objetivo (2026-10-31)
+
+| | Contenido |
+|---|---|
+| Versión activa | V0.1 Manual Control Tower: implementada, en producción (Netlify + Supabase propio), recorrido real PASS; piloto no iniciado |
+| Objetivo | V0.2 Calendar-First Editorial Studio: calendario mensual como puerta de entrada; Control Tower como inteligencia secundaria |
+| Decisión | Evolucionar el sistema actual, sin reconstrucción ([AUDIT_V0_2.md](AUDIT_V0_2.md)) |
+| Pendiente | D1 timing duro/blando al mover; D2 documento IJLV v1.4 (vigente, no recibido); D3 pilares Tec provisionales; D4 reset de la demostración |
+| Hipótesis | Las plantillas por categoría convivirán con formato × modo de producción hasta validar en uso |
+
+Los invariantes de abajo siguen vigentes. Las exclusiones de V0.1 (IA, investigación, integraciones) se mantienen en V0.2; la IA está aprobada como fase posterior con regla «IA ≠ aprobación».
 
 ## Propósito
 

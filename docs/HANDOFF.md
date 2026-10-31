@@ -95,6 +95,14 @@ Ver [ADR-002](DECISIONS/002_V0_1_BUILD_DECISIONS.md). Las de mayor impacto para 
 - **Pendiente del propietario:** recorrer creación con plantilla; ejecutar el reset cuando el sistema esté listo.
 - **Pendiente de diseño:** asistencia con IA (aprobada como siguiente paso; ver ADR-002).
 
+## Sesión 2 · 2026-10-31 · auditoría V0.2
+
+- **Encargo:** prompt maestro de evolución a Calendar-First Editorial Studio.
+- **Entregado:** [AUDIT_V0_2.md](AUDIT_V0_2.md) (estado, reuse map, gaps, propuesta V0.2, recomendación: evolucionar). Roadmap y canon actualizados con estado actual vs objetivo.
+- **Implementado (seguro, sin decisiones pendientes):** `src/domain/calendar.ts` (rejilla mensual lunes–domingo, navegación de meses, estado visible de tarjeta derivado de la máquina existente).
+- **Verificado:** dominio 39/39 PASS (también con `TZ=Asia/Tokyo`); base 216 PASS; tipos OK. Sin cambios de esquema ni datos.
+- **Bloqueado por decisión del propietario:** D1–D4 (ver auditoría). Migración 0008 y vistas no iniciadas.
+
 ## Siguiente unidad
 
 1. Rodrigo: crear el proyecto Supabase siguiendo README §«Configuración de Supabase» (pasos 1–7) y compartir solo el resultado de `npm run verify:supabase` (nunca claves).
