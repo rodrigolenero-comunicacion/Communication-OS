@@ -7,9 +7,9 @@ Estado: contrato de V0.1 (2026-10-27), con cambio de dirección a Calendar-First
 | | Contenido |
 |---|---|
 | Versión activa | **V0.2 Calendar-First Editorial Studio**: activa en producción y en uso por el propietario (reset operativo ejecutado y 0008 aplicada, confirmados por el propietario el 2026-10-31) |
-| Siguiente | **V0.2.1 Orígenes de contenido (Tec)**: implementada en código; migración 0009 preparada, pendiente de aplicación manual; **no verificada aún con sesión real** |
+| Siguiente | **V0.2.1 Orígenes de contenido (Tec)**: 0009 aplicada; alta de evento verificada con sesión real tras la corrección `6d406d4`; resto del recorrido de aceptación pendiente |
 | Decisión | Evolucionar el sistema actual, sin reconstrucción ([AUDIT_V0_2.md](AUDIT_V0_2.md), ADR-003, ADR-004) |
-| Pendiente | Aplicar 0009 y recorrido de aceptación V0.2.1; documento IJLV v1.4 (vigente, no recibido); validar ejes Tec provisionales contra fuente institucional |
+| Pendiente | Completar recorrido de aceptación V0.2.1; documento IJLV v1.4 (vigente, no recibido); validar ejes Tec provisionales contra fuente institucional |
 | Hipótesis | Las plantillas por categoría convivirán con formato × modo de producción hasta validar en uso |
 
 Los invariantes de abajo siguen vigentes. Las exclusiones de V0.1 (IA, investigación, integraciones) se mantienen en V0.2; la IA está aprobada como fase posterior con regla «IA ≠ aprobación».

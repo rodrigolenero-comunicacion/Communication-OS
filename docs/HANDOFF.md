@@ -9,8 +9,8 @@ Fecha: 2026-10-27. Estado: **parcialmente implementado — listo para conectar S
 | Reset operativo (`scripts/reset-operational-data.sql`) | **Ejecutado** en el Supabase de Content OS |
 | Migración `20261031000008_calendar_first.sql` | **Aplicada** |
 | V0.2 Calendar-First | **Activa** y en uso |
-| Migración `20261031000009_content_origins.sql` | **Preparada**, pendiente de aplicación manual |
-| V0.2.1 Orígenes de contenido | **Implementada**, **no verificada aún con sesión real** |
+| Migración `20261031000009_content_origins.sql` | **Aplicada** por el propietario |
+| V0.2.1 Orígenes de contenido | **Activa**; alta de Cobertura/evento verificada por el propietario tras la corrección `6d406d4`. Resto del recorrido de aceptación pendiente de confirmar |
 
 **Corrección V0.2.1 (smoke real, 2026-10-31):** «Elige una opción: production_mode_key» al guardar Cobertura/evento. Causa raíz: el registro de comandos de la app (`src/application/commands.ts`) exigía el modo para todos los orígenes; la función SQL de la 0009 ya lo condicionaba al origen. Corregido solo en la app; **sin migración nueva** (0009 sin cambios). Pruebas: `tests/domain/commands.test.ts` (reproduce el fallo) y `tests/db/12_command_roundtrip.mjs` (formulario → SQL real).
 

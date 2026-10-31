@@ -11,7 +11,7 @@ Estado: implementada; reset operativo ejecutado y migración 0008 aplicada por e
 
 ## V0.2.1 — Orígenes de contenido (Tec)
 
-Orgánico, cobertura/evento y material existente sin duplicar Communication Hub (ADR-004). Implementada en código; 0009 preparada, pendiente de aplicación manual; no verificada aún con sesión real.
+Orgánico, cobertura/evento y material existente sin duplicar Communication Hub (ADR-004). 0009 aplicada; activa. Alta de evento verificada con sesión real; recorrido de aceptación completo pendiente.
 
 ## Después (orden tentativo, cada fase con diseño y autorización propios)
 
