@@ -20,10 +20,12 @@ export function MonthCalendar({
   weeks,
   today,
   cardsByDate,
+  dragEnabled = true,
 }: {
   weeks: CalendarDay[][];
   today: string;
   cardsByDate: Record<string, CardData[]>;
+  dragEnabled?: boolean;
 }) {
   const router = useRouter();
   const [over, setOver] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export function MonthCalendar({
                       {cards.map((c) => <span key={c.pieceId} className={`client-${c.color} client-dot`} />)}
                     </div>
                     <div className="hidden space-y-1 sm:block">
-                      {cards.slice(0, MAX_CARDS).map((c) => <CalendarCard key={c.pieceId} card={c} draggable />)}
+                      {cards.slice(0, MAX_CARDS).map((c) => <CalendarCard key={c.pieceId} card={c} draggable={dragEnabled} />)}
                       {cards.length > MAX_CARDS && (
                         <Link href={`/dia/${day.date}`} className="block text-xs text-muted underline">+{cards.length - MAX_CARDS} más</Link>
                       )}

@@ -15,6 +15,7 @@ const GROUPS: { key: string; title: string; description: string; statuses: strin
 export default async function ContentBankPage() {
   const { snapshot } = await loadContext();
   const undated = buildCards(snapshot).filter((c) => c.date === null && c.statusKey !== "external");
+  const v02Ready = snapshot.formats.length > 0;
   const weekByPiece = new Map(snapshot.facts.map((f) => [f.id, f.assignedWeek]));
 
   const item = (c: CardData) => {
@@ -23,7 +24,7 @@ export default async function ContentBankPage() {
       <li key={c.pieceId} className="space-y-2 rounded-md border border-line bg-paper p-2">
         <CalendarCard card={c} />
         <p className="text-xs text-muted">{c.accountName}{week ? ` · semana del ${fmtWeek(week)}, sin día` : ""}</p>
-        <MoveDateControl pieceId={c.pieceId} version={c.version} currentDate={null} movable={c.movable} label="Agendar en" />
+        {v02Ready && <MoveDateControl pieceId={c.pieceId} version={c.version} currentDate={null} movable={c.movable} label="Agendar en" />}
       </li>
     );
   };

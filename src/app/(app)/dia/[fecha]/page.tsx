@@ -79,7 +79,7 @@ export default async function DayStudioPage({
                           {accountCards.map((c) => (
                             <li key={c.pieceId} className="space-y-2 rounded-md border border-line p-2">
                               <CalendarCard card={c} highlight={c.pieceId === nueva} />
-                              <MoveDateControl pieceId={c.pieceId} version={c.version} currentDate={c.date} movable={c.movable} />
+                              {snapshot.formats.length > 0 && <MoveDateControl pieceId={c.pieceId} version={c.version} currentDate={c.date} movable={c.movable} />}
                             </li>
                           ))}
                         </ul>

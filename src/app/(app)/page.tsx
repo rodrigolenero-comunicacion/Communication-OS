@@ -69,7 +69,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         </p>
       )}
 
-      <MonthCalendar weeks={weeks} today={today} cardsByDate={cardsByDate} />
+      <MonthCalendar weeks={weeks} today={today} cardsByDate={cardsByDate} dragEnabled={!migrationPending} />
       <p className="mt-2 text-xs text-muted">
         Abre un día para agregar contenido. Arrastra una tarjeta para cambiarla de día; también puedes hacerlo desde el día o la ficha con «Mover a».
       </p>

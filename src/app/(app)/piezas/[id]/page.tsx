@@ -67,6 +67,8 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
     : piece.production_status === "in_review" ? "En revisión: pide cambios desde Review Desk para editar." : null;
   const v = piece.version;
   const calendarDate = calendarDateOf(fact);
+  // Campos de V0.2 solo si la migración 0008 está aplicada (si no, update_piece los rechazaría).
+  const v02Ready = snapshot.formats.length > 0;
   const brandAxes = snapshot.axes.filter((x) => x.brand_id === brand.id && x.active);
   const axisName = (axisId: string | null | undefined) => {
     const x = axisId ? snapshot.axes.find((a) => a.id === axisId) : undefined;
@@ -151,7 +153,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
             </p>
             {!piece.archived_at && (
               <div className="mt-2 flex flex-wrap items-start gap-4">
-                <MoveDateControl pieceId={id} version={v} currentDate={calendarDate} movable={canMoveByDrag(fact)} />
+                {v02Ready && <MoveDateControl pieceId={id} version={v} currentDate={calendarDate} movable={canMoveByDrag(fact)} />}
                 {fact.assignedWeek && scheduled.length === 0 && !published && (
                   <CommandForm command="unassign_week" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel="Quitar del calendario" inline tone="secondary" />
                 )}
@@ -163,6 +165,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
             {editable && (
             <CommandForm command="update_piece" requestId={newRequestId()} hidden={{ piece_id: id, expected_version: v }} submitLabel="Guardar datos">
               <Field label="Título"><input name="title" defaultValue={piece.title} required className="input" /></Field>
+              {v02Ready && (<>
               <Field label="Idea"><textarea name="idea" defaultValue={piece.idea ?? ""} rows={3} className="input" /></Field>
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Formato">
@@ -194,6 +197,7 @@ export default async function PiecePage({ params }: { params: Promise<{ id: stri
                   </Field>
                 )}
               </div>
+              </>)}
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Objetivo"><textarea name="objective" defaultValue={piece.objective ?? ""} rows={2} className="input" /></Field>
                 <Field label="Audiencia"><textarea name="audience" defaultValue={piece.audience ?? ""} rows={2} className="input" /></Field>
